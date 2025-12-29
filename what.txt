@@ -1,0 +1,30 @@
+öncelikle aklıma terminal üzerinde ok tuşlarıyla hareket ettirebileceğim top benzeri karakter üretme fikri geldi
+
+fakat sonra dedim ki "neden ben bunu biraz daha karmaşık hale getirip bir oyun haline getirmiyorum?" 
+
+şimdiyse pacman tarzı bir oyuna mı çevirsem acaba dedim fakat daha önce hiç (kendim) oyun yazmadığım için daha basit bir oyunla başlayacağım fakat sonra tüm bu oyunları birden yapıp başlangıç menüsü ile seçebilme özelliği getirebileceğim aklıma geldi
+
+Features: 
+
+	> pause menu 
+	> game over menu
+	> start menu 
+		burada ya ilk başa oyna ayarlar credits gibi ön bir seçim ekranı koyup oynaya tıkladıktan sonra oyunları listeleyip seçtirbiliriz 
+		ya da direkt olarak oyunları listeleyip seçtirebiliriz.
+		bunların hepsinde baya iyi ui yapabilirim ve hover yaptığım kutucuklarda yazan yazılar hover olduğu belli olsun diye upper case gözükebilir.
+
+┌────────────┐
+│  CONTINUE  │
+└────────────┘
+┌────────────┐
+│  CONTINUE  │
+└────────────┘
+┏━━━━━━━━━━━━┓
+┃  CONTINUE  ┃ // hovered one, switch with arrow keys
+┗━━━━━━━━━━━━┛
+
+How to make bold chars?
+
+In Terminal: echo -e "\e[1mThis is bold text!\e[0m"
+
+In C++: std::cout << "\e[1mBold\e[0m non-bold" << std::endl;
