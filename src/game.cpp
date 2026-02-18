@@ -1,53 +1,118 @@
 #include "game.h"
-#include <locale.h>
+#include <locale.h> //for setlocale
 #include <cstdlib>
+#include <ncurses.h>
 #include <ncursesw/ncurses.h>
 #include <string.h>
+#include <algorithm>
+
+// void Game::resizeBlock(BLOCK* blk){
+//      // windows cannot be larger than stdscr
+//      if (COLS >= win_width && LINES >= win_height){
+//           // mainwin = new BLOCK(win_height, win_width, (LINES - win_height)/2, (COLS - win_width)/2 );
+//           wresize(blk->win,win_height,win_width);
+//           mvwin(blk->win,)
+//      }else{
+//           if (COLS < win_width && LINES < win_height){
+//                gamewin = new block(LINES, COLS, 0, 0 );
+//           }else if (COLS < win_width){
+//                gamewin = new block(win_height, COLS, (LINES - win_height)/2, 0 );
+//           }else{
+//                gamewin = new block(LINES, win_width, 0, (COLS - win_width)/2 );
+//           }    
+//      }
+// }
 
 void Game::initialize(){
+     
      setlocale(LC_ALL, ""); //for unicode char display
-     // if (!initscr()){ 
-     //      printf("Error: screen could not initialized.");
-     //      exit(1);
-     // }
+     
      initscr();
-     clear();
      cbreak();
      noecho();
-     
-     // windows cannot be larger than stdscr
-     if (COLS >= win_width && LINES >= win_height){
-          gamewin = new block(win_height, win_width, (LINES - win_height)/2, (COLS - win_width)/2 );
-     }else{
-          if (COLS < win_width && LINES < win_height){
-               gamewin = new block(LINES, COLS, 0, 0 );
-          }else if (COLS < win_width){
-               gamewin = new block(win_height, COLS, (LINES - win_height)/2, 0 );
-          }else{
-               gamewin = new block(LINES, win_width, 0, (COLS - win_width)/2 );
-          }    
-     }
-     refresh();
-     box(gamewin->win, 0, 0);
-     wrefresh(gamewin->win);
+     curs_set(0); // makes cursor invisible
 }
 
 void Game::start(){
      
-     int lastLINES, lastCOLS;
+     inMain = true;
+     
+     if (mainwin == nullptr){
+          alignWin(mainwin);
+     }
+     
+     currwin = mainwin;
      
      while(true){
-          if (COLS < win_height || LINES < win_width){ // hep bu değerden küçük olduğu için sonsuz döngüye giriyor
-               // sizeAgain'te kalacak ve eğer bu win_width ve win_height değeri düzelirse çıkacak
-               sizeAgain();
+          int ch = getch();
+          if (ch == KEY_RESIZE){
+               alignWin(currwin); //seg fault bebeğim!!!
           }
-          if (COLS != lastCOLS || LINES != lastLINES){
-               
-          }
+
+          // if (inMain){
+          //      handleMain(ch);
+          // }
+          // if (inSelect){
+          //      handleSelec(ch);
+          // }
+          
           
      }
      
      endwin();
+}
+
+void Game::alignWin(WINDOW* win){
+     
+     if (win == nullptr){
+          currwin = newwin(1,1,0,0);
+     }
+     
+     if(lastLINES != LINES || lastCOLS != COLS){
+          
+          lastLINES = LINES;
+          lastCOLS = COLS;
+          
+          if (COLS >= win_width && LINES >= win_height){
+               wclear(currwin);
+               wresize(win,win_height,win_width);
+               mvwin(win,(LINES-win_height)/2,(COLS-win_width)/2);
+               box(win,0,0);
+               wrefresh(win);
+          }else{
+               // if (COLS < win_width && LINES < win_height){ // hem width hem height yetersiz
+               //      wresize(win,LINES,COLS);
+               //      mvwin(win,0,0);
+               // }else if (COLS < win_width){ // width yetersiz
+               //      wresize(win,win_height,COLS);
+               //      mvwin(win,(LINES-win_height)/2,0);
+               // }else{ // height yetersiz
+               //      wresize(win,LINES,win_width);
+               //      mvwin(win,0,(COLS-win_width)/2);
+               // }   
+              
+              int h = std::min(LINES, win_height);
+              int w = std::min(COLS, win_height);
+              
+              wresize(win,h,w);
+              mvwin(win, (LINES-h)/2, (COLS-w)/2);
+              box(win,0,0);
+              wrefresh(win);
+               
+              tooSmall();
+          }
+     }
+     
+}
+
+void Game::handleMain(int input){
+     if (startbutt == nullptr){
+          startbutt = new BUTTON(mainwin,"START",10);
+          exitbutt = new BUTTON(mainwin,"EXIT",13);
+     }
+}
+
+void Game::handleSelec(int input){
 }
 
 int findDigits(int num){
@@ -56,48 +121,55 @@ int findDigits(int num){
      return 1 + findDigits(num/10);
 }
 
-void Game::sizeAgain(){ // acaba daha iyi nasıl yazabilirdim?
+void Game::tooSmall(){ // acaba daha iyi nasıl yazabilirdim?
+     //sorun şu an ekran küçülünce otomatik olarak uyarı moduna geçiyor fakat hem geri çıkmıyor hem de mod içinde güncellenmiyor.
+     //difference detecting kısmında bir sıkıntı olabilir.
           
      // ekrandaki her şeyi sil
      //windowlar üst üste binebiliyor
      
-     const char* mesg1 = "Screen size is too small.";
-     const char* mesg2 = "(It should 75 COLS width and 16 LINES height.)";
+     const char* mesg1 = "Your screen is too small.";
+     const char* mesg2 = "(It should 75 COLS width and 16 LINES height minimum.)";
      
-     int lastCOLS, lastLINES;
+     int prevLINES = -1;
+     int prevCOLS = -1;
+     
           
-     do{
-          if (lastCOLS != COLS || lastLINES != LINES){ // work if resized.
+     while (LINES < win_height || COLS < win_width){
+          if (prevCOLS != COLS || prevLINES != LINES){ // work if resized.
                
-               clear();
-               lastCOLS = COLS;
-               lastLINES = LINES;
-               
-               // if (LINES < win_height && COLS < win_width){
-               //      wresize(gamewin->win, LINES, COLS); //resize gamewin because windows cannot bigger than stdscr
-               // }else if (LINES < win_height){
-               //      wresize(gamewin->win, LINES, win_width); //resize gamewin because windows cannot bigger than stdscr
-               // }else{
-               //      wresize(gamewin->win, win_height, COLS); //resize gamewin because windows cannot bigger than stdscr
-               // }
+               prevCOLS = COLS;
+               prevLINES = LINES;
                
                int curr_y = (LINES-2)/2;
                
                clear();
                mvprintw(curr_y++,(COLS-strlen(mesg1))/2,"%s",mesg1);
                mvprintw(curr_y++,(COLS-strlen(mesg2))/2,"%s",mesg2);
-               mvprintw(curr_y,(COLS-(strlen("Current Size : COLS-> ,LINES-> ")+findDigits(COLS)+findDigits(LINES)))/2,"Current Size : COLS-> %d, LINES-> %d",COLS,LINES);
+               mvprintw(curr_y,(COLS-(strlen("Current Size : COLS-> ,LINES-> ")+findDigits(COLS)+findDigits(LINES)))/2,"Current Size : COLS-> %d, LINES-> %d",prevCOLS,prevLINES);
                refresh();
           }
-     }while (LINES < win_height || COLS < win_width); // work only if size is changed.
-               
+          
+          int ch = getch();
+          if (ch == KEY_RESIZE) continue;
+          
+          // napms(50); //cpu'yu yormamak için kısa bekleme diyor ai
+     } // work only if size is changed.
+          
+     // nodelay(stdscr, FALSE); ai ekledi ne olduğu hakkında hiçbir fikrim yok
+     clear();
+     refresh();
      
-     // ekranı geri yükle
+     alignWin(currwin);
+     
+     // ekranı geri yükle (sen bir dahisin)
      
 }
 
-void bold_box(WINDOW* win){
+void bold_box(WINDOW* win){ //wide character kullandığımız için artık -lncurses değil -lncursesw flagini kullanıcaz.
+     // ayrıca #include <ncursesw/ncurses.h>
      // Define the wide characters for the border
+     
      cchar_t ls, rs, ts, bs, tl, tr, bl, br;
 
      setcchar(&ls, L"┃", A_BOLD, 0, NULL); // Left side
@@ -110,12 +182,7 @@ void bold_box(WINDOW* win){
      setcchar(&br, L"┛", A_BOLD, 0, NULL); // Bottom right
 
      // Apply the border to the window
+     wattron(win, A_BOLD);
      wborder_set(win, &ls, &rs, &ts, &bs, &tl, &tr, &bl, &br);
-     wrefresh(win);
+     // wrefresh(win); // zaten redraw içinde wrefresh ediyoruz.
 }
-
-// void Game::hideBlk(block* blk){
-//      blk->isVisible = true;
-//      wborder(blk->win, ' ', ' ', ' ',' ',' ',' ',' ',' ');
-//      wrefresh(blk->win);
-// }

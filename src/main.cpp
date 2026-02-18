@@ -1,12 +1,12 @@
 #include "game.h"
-#include <ncurses.h>
-#include <iostream>
+#include <ncursesw/ncurses.h>
+
 
 int main(){
      Game g; 
      g.initialize();
      g.start();
-     char ch ;
-     ch = getch();
+     // char ch ;
+     // ch = getch();
      endwin();
 }
