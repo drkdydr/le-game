@@ -79,8 +79,14 @@ class Game{
                                         "|__   |   __|  |__|   __|   --| | |  _ ",
                                         "|_____|_____|_____|_____|_____| |_| |_|"};
      
+     char* windowTitle;
+     
      bool inMain = true;
      bool inSelect = false;
+     bool inGame1 = false;
+     bool inGame2 = false;
+     bool inGame3 = false;
+     
      // bool inSS = false; // (SpaceShooters) bu şekilde mi yapacağım emin değilim.
      
      int win_width= 75 , win_height = 16;
@@ -90,18 +96,19 @@ class Game{
      // block* selectionbox2;
      // block* selectionbox3;
     
-    WINDOW* currwin = nullptr;
+     void resizeNotif(int h, int w);
      
      void handleMain(int input);
+     void drawMain();
      WINDOW* mainwin = nullptr;
           // buttonları daha mainwin olmadan initialize ettiğim için seg fault yemişim.
           // BUTTON* startbutt = new BUTTON(mainwin,"START",10);
           // BUTTON* exitbutt = new BUTTON(mainwin,"EXIT",13);
           BUTTON* startbutt = nullptr;
           BUTTON* exitbutt = nullptr;
-          
+     
      void handleSelec(int input);
-     WINDOW* selecwin = nullptr;
+     void drawSelec();   
           // BUTTON* game1butt = new BUTTON(selecwin,"SPACE SHOOTERS",7);
           // BUTTON* game2butt = new BUTTON(selecwin,"DINO GAME",10);
           // BUTTON* game3butt = new BUTTON(selecwin,"COMING SOON",13);
@@ -116,15 +123,9 @@ class Game{
     // void create_win(BLOCK* win); // create win and resize according stdscr
     // void handle_win(BLOCK); // handle already exist win size according stdscr
     
-     void handleWin(WINDOW* win);
-          void alignWin(WINDOW* win); // bunun başına block constructor yaptığımda zaten iki fonksiyonu da elde edeceğim.
+     void alignWin(); // bunun başına block constructor yaptığımda zaten iki fonksiyonu da elde edeceğim.
      
-     void drawCurrScr();
-          void tooSmall();
-               void drawWin();
      
-     // void hideBlk(* blk);
-
      public:
      void initialize();
      void start();
