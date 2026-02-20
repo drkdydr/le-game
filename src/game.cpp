@@ -5,7 +5,21 @@
 #include <ncursesw/ncurses.h>
 #include <string.h>
 #include <algorithm>
+#include <string>
+#include <unistd.h> // for usleep();
+#include <vector>
 
+//todo :
+// window size değişince "var olan tüm button'ların" size ve pozisyonlarının buna uygun şekilde değişmesini sağla
+// başka bir sorun daha vardı fakat hatırlamıyorum start içine bak wrefresh ve box işlemleri yeterince optimize gelmedi (eğer optimize bu demekse hemen bir bakayım.)
+// evet bu demekmiş (var olan en iyi haline getirme)
+
+// handleSelect'te ok tuşlarını kullandığımda (yani butonlara erişmeye çalıştığımda) seg fault yiyorum.
+// büyük ihtimalle butonlarla ilgili olan sıkıntı da bu yüzdendi
+
+// ekrana butonları düzgünce yazdırmanın yolunu bul.
+
+//space shooters class'ı oluştur ve oyunu orada yaz.
 
 void Game::initialize(){
      
@@ -16,7 +30,6 @@ void Game::initialize(){
      noecho();
      curs_set(0); // makes cursor invisible
      
-     nodelay(mainwin,true);
      
 }
 
@@ -24,37 +37,61 @@ void Game::start(){
      
      // inMain = true; // initialized in game.h already
      
-     mainwin = newwin(1,1,0,0);
-     
-     startbutt = new BUTTON(mainwin,"START",9); //index olduğu için bir eksiği
-     exitbutt = new BUTTON(mainwin,"EXIT",12);
-     
-     game1butt = new BUTTON(mainwin,"SPACE SHOOTERS",6);
-     game2butt = new BUTTON(mainwin,"SPACE SHOOTERS",9);
-     game3butt = new BUTTON(mainwin,"SPACE SHOOTERS",12);
-     
      windowTitle = "MAIN MENU";
      
-     alignWin();
+     mainwin = newwin(1,1,0,0);
+     alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
+     
+     startbutt = new BUTTON(mainwin,"START",11); //index olduğu için bir eksiği
+     exitbutt = new BUTTON(mainwin,"EXIT",14);
+     
+     game1butt = new BUTTON(mainwin,"SPACE SHOOTERS",8);
+     game2butt = new BUTTON(mainwin,"SPACE SHOOTERS",11);
+     game3butt = new BUTTON(mainwin,"SPACE SHOOTERS",14);
+     
+     startbutt->isSelected = true;
+     game1butt->isSelected = true;
+     
+     // nodelay(stdscr,true);
+     nodelay(mainwin,true); //nodelay'i açtığım için şimdi tick mantığı vs eklemem lazım.
+     keypad(mainwin,true);
+     
+     long tick = 0;
      
      while(true){
           
+          if (exitWanted) break;
           
-          int ch = getch(); // burada bir sorun var getch bizim input vermemiz için bekleyecek fakat biz bu beklemeyi istemiyoruz akıcı şekilde oynamak istiyoruz.
-          if (ch == KEY_RESIZE){
-               alignWin();
+          int ch = wgetch(mainwin);
+          
+          if (ch == KEY_RESIZE) alignWin();
+          
+          if (COLS < win_width || LINES < win_height){
+               resizeNotif();
                continue;
           }
-          // box(mainwin,0,0);
+     
+          wclear(mainwin);
+          box(mainwin,0,0);
+          mvwprintw(mainwin,0,1," %s ", windowTitle);
           // wrefresh(mainwin);
-          // if (inMain){
-          //      handleMain(ch);
-          //      drawMain();
-          // }else if (inSelect){
-          //      handleSelec(ch);
-          //      drawSelec();
-          // }
-
+          
+          if (inMain){ //sıkıntı burada
+               handleMain(ch);
+          } else if (inSelect){
+              handleSelec(ch); // sorun burada. (ok tuşlarında seg fault yiyok.) + (hiçbir tuşa basmasak da spaceshooters'a geçiyor.)
+          }
+          
+          usleep(10000);
+          tick++;
+          
+          if (inGame1 || inGame2 || inGame3) break;
+          
+     }
+    
+     if (inGame1){
+     }else if(inGame2){
+     }else if(inGame3){
      }
      
      endwin();
@@ -72,48 +109,140 @@ void Game::alignWin(){
      werase(mainwin);
      wresize(mainwin,h,w);
      mvwin(mainwin, (LINES-h)/2, (COLS-w)/2);
-     werase(mainwin);
      
-     if (COLS < win_width || LINES < win_height) 
-          resizeNotif(h,w);
-     else{
-          box(mainwin,0,0);
-          mvwprintw(mainwin,0,1," %s ", windowTitle); //alignwin sadece align yapsın box işlemi dışarıda kalsın istiyorum (resizeNotif dışarıda mı olsun içeride mi daha düşünmedim.)
-     } 
+}
+
+void Game::hideButton(BUTTON* b){
+     if (b == nullptr) return;
+     // wclear(b->win);
+     wresize(b->win,0,0);
+     mvwin(b->win,0,0);
+     // wrefresh(b->win); // dikkat et! sıkıntı çıkarabilir
+}
+
+void Game::alignButton(BUTTON* b){
+     if (b == nullptr) return;
+     int main_w = getmaxx(mainwin);
+     // wclear(b->win);
+     wresize(b->win,b->default_height,b->default_width);
+     mvwin(b->win, b->rel_y, (main_w - b->default_width)/2);
+     // wrefresh(b->win);
+}
+
+void Game::resizeNotif(){ // acaba daha iyi nasıl yazabilirdim?
+     //windowlar üst üste binebiliyor
      
-     // box(mainwin,0,0);
-     //      wprintw(mainwin, "C: %d, L: %d" , COLS,LINES);
+     int height, width;
      
+     getmaxyx(mainwin, height, width);
+     
+     const char* mesg1 = "Your screen is too small.";
+     std::string mesg2 = "(It should " + std::to_string(win_width) + " COLS width and "+ std::to_string(win_height) + " LINES height minimum.)";
+     
+     int curr_y = (height-2)/2;
+     
+     // werase(mainwin);
+     mvwprintw(mainwin, curr_y++,(width-strlen(mesg1))/2,"%s",mesg1);
+     mvwprintw(mainwin, curr_y++,(width-(mesg2.size()))/2,"%s",mesg2.c_str());
+     mvwprintw(mainwin, curr_y,(width-(strlen("Current Size : COLS-> ,LINES-> ")+findDigits(width)+findDigits(height)))/2,"Current Size : COLS-> %d, LINES-> %d",width,height);
      wrefresh(mainwin);
 }
 
-void Game::resizeNotif(int h, int w){ // acaba daha iyi nasıl yazabilirdim?
-     //sorun şu an ekran küçülünce otomatik olarak uyarı moduna geçiyor fakat hem geri çıkmıyor hem de mod içinde güncellenmiyor.
-     //difference detecting kısmında bir sıkıntı olabilir.
-          
-     // ekrandaki her şeyi sil
-     //windowlar üst üste binebiliyor
-     
-     const char* mesg1 = "Your screen is too small.";
-     const char* mesg2 = "(It should 75 COLS width and 16 LINES height minimum.)";
-     
-     int curr_y = (h-2)/2;
-     
-     mvwprintw(mainwin, curr_y++,(w-strlen(mesg1))/2,"%s",mesg1);
-     mvwprintw(mainwin, curr_y++,(w-strlen(mesg2))/2,"%s",mesg2);
-     mvwprintw(mainwin, curr_y,(w-(strlen("Current Size : COLS-> ,LINES-> ")+findDigits(w)+findDigits(h)))/2,"Current Size : COLS-> %d, LINES-> %d",w,h);
-     
-}
-
 void Game::handleMain(int input){
-     if (startbutt == nullptr){
+     switch(input){
+          case KEY_UP : case 'w' : case 'k' : case KEY_DOWN : case 's' : case 'j': // aga ikisi de aynı şeye varıyor.
+               if (startbutt->isSelected){
+                    startbutt->isSelected = false;
+                    exitbutt->isSelected = true;
+               }else{
+                    exitbutt->isSelected = false;
+                    startbutt->isSelected = true;
+               }
+               break;
+          case KEY_ENTER : case ' ': case '\n': 
+          // KEY_ENTER numpad'deki enter tuşunu
+          // \n ise klavyedeki enter'ı temsil ediyormuş.
+               if (startbutt->isSelected){
+                    inMain = false;
+                    inSelect = true;
+                    windowTitle = "SELECTION MENU";
+               }
+               else if (exitbutt->isSelected){
+                    exitWanted = true;
+                    return;
+               }
+               break;
+          case 'q' :
+               exitWanted = true;
+               return;
+          default:
+               break;
      }
+     drawMain();
+     usleep(10000);
 }
 
-void Game::drawMain(){}
+void Game::drawMain(){
+     printLogo(game_logo,2);
+     wrefresh(mainwin);
+     // startbutt->drawButt();
+     // exitbutt->drawButt();
+}
 
+void Game::printLogo(std::vector<const char*> &logo, int y_idx){
+     
+     int w_height, w_width;
+     
+     getmaxyx(mainwin, w_height, w_width);
+     
+     for(const char* line : logo)
+          mvwprintw(mainwin,y_idx++,(w_width - strlen(line))/2,"%s",line);
+     
+}
 
 void Game::handleSelec(int input){
+     const static int button_count = 3;
+     static int curr_idx = 0;
+     switch(input){
+          case KEY_UP : case 'w' : case 'k' :
+               selecwinButtons[curr_idx]->isSelected = false;
+               curr_idx = (curr_idx + button_count - 1) % button_count;
+               selecwinButtons[curr_idx]->isSelected = true;
+          break; 
+          case KEY_DOWN : case 's' : case 'j':
+               selecwinButtons[curr_idx]->isSelected = false;
+               curr_idx = (curr_idx + 1) % button_count;
+               selecwinButtons[curr_idx]->isSelected = true;
+          break; 
+          case KEY_ENTER : case ' ': case '\n': 
+          // KEY_ENTER numpad'deki enter tuşunu
+          // \n ise klavyedeki enter'ı temsil ediyormuş.
+               if (game1butt->isSelected){
+                    inSelect = false;
+                    inGame1 = true;
+                    windowTitle = "SPACE SHOOTERS";
+               }
+               if (game2butt->isSelected){
+                    inSelect = false;
+                    inGame2 = true;
+                    windowTitle = "DINO GAME";
+               }
+               if (game3butt->isSelected){
+                    inSelect = false;
+                    inGame3 = true;
+                    windowTitle = "COMING SOON";
+               }
+          break;
+          case 'q' :
+               inSelect = false;
+               inMain = true;
+               windowTitle = "MAIN MENU";
+          break;
+          default:
+          break;
+     }
+     drawSelec();
+     usleep(10000);
 }
 
 void Game::drawSelec(){}
@@ -126,22 +255,48 @@ int findDigits(int num){
 
 
 
-void bold_box(WINDOW* win){ //wide character kullandığımız için artık -lncurses değil -lncursesw flagini kullanıcaz.
+void bold_box(WINDOW* win){ 
+     // wide character kullandığımız için artık -lncurses değil -lncursesw flagini kullanıcaz.
      // ayrıca #include <ncursesw/ncurses.h>
      // Define the wide characters for the border
      
      cchar_t ls, rs, ts, bs, tl, tr, bl, br;
 
-     setcchar(&ls, L"┃", A_ATTRIBUTES, 0, NULL); // Left side
-     setcchar(&rs, L"┃", A_ATTRIBUTES, 0, NULL); // Right side
-     setcchar(&ts, L"━", A_ATTRIBUTES, 0, NULL); // Top side
-     setcchar(&bs, L"━", A_ATTRIBUTES, 0, NULL); // Bottom side
-     setcchar(&tl, L"┏", A_ATTRIBUTES, 0, NULL); // Top left
-     setcchar(&tr, L"┓", A_ATTRIBUTES, 0, NULL); // Top right
-     setcchar(&bl, L"┗", A_ATTRIBUTES, 0, NULL); // Bottom left
-     setcchar(&br, L"┛", A_ATTRIBUTES, 0, NULL); // Bottom right
+     setcchar(&ls, L"┃", A_NORMAL, 0, NULL); // Left side
+     setcchar(&rs, L"┃", A_NORMAL, 0, NULL); // Right side
+     setcchar(&ts, L"━", A_NORMAL, 0, NULL); // Top side
+     setcchar(&bs, L"━", A_NORMAL, 0, NULL); // Bottom side
+     setcchar(&tl, L"┏", A_NORMAL, 0, NULL); // Top left
+     setcchar(&tr, L"┓", A_NORMAL, 0, NULL); // Top right
+     setcchar(&bl, L"┗", A_NORMAL, 0, NULL); // Bottom left
+     setcchar(&br, L"┛", A_NORMAL, 0, NULL); // Bottom right
 
      // Apply the border to the window
      wborder_set(win, &ls, &rs, &ts, &bs, &tl, &tr, &bl, &br);
      // wrefresh(win); // zaten redraw içinde wrefresh ediyoruz.
+}
+
+BUTTON::BUTTON(WINDOW* parent, char* cont, int rel_y_){
+     default_width = 31;
+     default_height = 5;
+     rel_y = rel_y_;
+     
+     isSelected = false;
+     
+     content = cont;
+     
+     win = derwin(parent, 0, 0, 0, 0); // mainwin size independant
+     nodelay(win,true);
+}
+
+void BUTTON::drawButt(){
+     if (isSelected){
+          wattron(win, A_BOLD);
+          bold_box(win);
+     }else{
+          wattroff(win,A_BOLD);
+          box(win,0,0);
+     }
+     mvwprintw(win,rel_y,(default_width-static_cast<int>(content.size()))/2,content.c_str());
+     wrefresh(win);
 }

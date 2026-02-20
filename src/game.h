@@ -4,6 +4,7 @@
 #include <cstring>
 #include <ncurses.h>
 #include <string>
+#include <vector>
 #include "entities.h"
 
 int findDigits(int num);
@@ -29,57 +30,44 @@ void bold_box(WINDOW* w);
 
 
 struct BUTTON {
-     int width;
-     int height;
+     int default_width;
+     int default_height;
      WINDOW* win;
+     
+     int rel_y;
+     
+     bool isSelected;
      
      std::string content;
      
-     BUTTON(WINDOW* parent, char* cont, int begin_y){
-          width = 31;
-          height = 5;
-          
-          int parent_y, parent_x;
-          getmaxyx(parent,parent_y,parent_x);
-          
-          int abs_x = (parent_x-width)/2;
-          int abs_y = begin_y;
-          
-          content = cont;
-          
-          win = subwin(parent, 5, 31, abs_y, abs_x);
-     }
+     BUTTON(WINDOW* parent, char* cont, int begin_y);
+     void drawButt();
      
-     void redraw(bool isBold){
-          if (isBold){
-               wattron(win, A_BOLD);
-               bold_box(win);
-          }else{
-               box(win,0,0);
-               wrefresh(win);
-          }
-          const char* contch = content.c_str();
-          mvwprintw(win,3,(width-static_cast<int>(content.size()))/2,content.c_str());
-          wrefresh(win);
-     }
 };
 
 class Game{
-     const char game_logo[8][60] = {"$$\\         $$\\  $$$$$$\\   $$$$$$\\  $$\\      $$\\ $$$$$$$$\\ ",
-                                    "$$ |        $  |$$  __$$\\ $$  __$$\\ $$$\\    $$$ |$$  _____|",
-                                    "$$ | $$$$$$\\\\_/ $$ /  \\__|$$ /  $$ |$$$$\\  $$$$ |$$ |      ",
-                                    "$$ |$$  __$$\\   $$ |$$$$\\ $$$$$$$$ |$$\\$$\\$$ $$ |$$$$$\\    ",
-                                    "$$ |$$$$$$$$ |  $$ |\\_$$ |$$  __$$ |$$ \\$$$  $$ |$$  __|   ",
-                                    "$$ |$$   ____|  $$ |  $$ |$$ |  $$ |$$ |\\$  /$$ |$$ |      ",
-                                    "$$ |\\$$$$$$$\\   \\$$$$$$  |$$ |  $$ |$$ | \\_/ $$ |$$$$$$$$\\ ",
-                                    "\\__| \\_______|   \\______/ \\__|  \\__|\\__|     \\__|\\________|",};
+     std::vector<const char*> game_logo = {"$$\\         $$\\  $$$$$$\\   $$$$$$\\  $$\\      $$\\ $$$$$$$$\\ ",
+                                           "$$ |        $  |$$  __$$\\ $$  __$$\\ $$$\\    $$$ |$$  _____|",
+                                           "$$ | $$$$$$\\\\_/ $$ /  \\__|$$ /  $$ |$$$$\\  $$$$ |$$ |      ",
+                                           "$$ |$$  __$$\\   $$ |$$$$\\ $$$$$$$$ |$$\\$$\\$$ $$ |$$$$$\\    ",
+                                           "$$ |$$$$$$$$ |  $$ |\\_$$ |$$  __$$ |$$ \\$$$  $$ |$$  __|   ",
+                                           "$$ |$$   ____|  $$ |  $$ |$$ |  $$ |$$ |\\$  /$$ |$$ |      ",
+                                           "$$ |\\$$$$$$$\\   \\$$$$$$  |$$ |  $$ |$$ | \\_/ $$ |$$$$$$$$\\ ",
+                                           "\\__| \\_______|   \\______/ \\__|  \\__|\\__|     \\__|\\________|",};
      
-     const char select_logo[4][40] =   {" _____ _____ __    _____ _____ _____ _ ",
-                                        "|   __|   __|  |  |   __|     |_   _|_|",
-                                        "|__   |   __|  |__|   __|   --| | |  _ ",
-                                        "|_____|_____|_____|_____|_____| |_| |_|"};
+     
+     std::vector<const char*> select_logo =   {" _____ _____ __    _____ _____ _____ _ ",
+                                               "|   __|   __|  |  |   __|     |_   _|_|",
+                                               "|__   |   __|  |__|   __|   --| | |  _ ",
+                                               "|_____|_____|_____|_____|_____| |_| |_|"};
+     
+     void printLogo(std::vector<const char*> &logo, int y_idx);
+     // 0 : for main-logo 1 : for select logo 
+     // (if i want to add new logos i will switch id's data type to integer.)
      
      char* windowTitle;
+     
+     bool exitWanted = false;
      
      bool inMain = true;
      bool inSelect = false;
@@ -87,16 +75,17 @@ class Game{
      bool inGame2 = false;
      bool inGame3 = false;
      
+     
      // bool inSS = false; // (SpaceShooters) bu şekilde mi yapacağım emin değilim.
      
-     int win_width= 75 , win_height = 16;
+     int win_width= 75 , win_height = 18;
      int lastLINES, lastCOLS; // window size değişmiş mi kontrol için
      // block* gamewin;
      // block* selectionbox1;
      // block* selectionbox2;
      // block* selectionbox3;
     
-     void resizeNotif(int h, int w);
+     void resizeNotif();
      
      void handleMain(int input);
      void drawMain();
@@ -120,6 +109,14 @@ class Game{
      WINDOW* game2win = nullptr;
      WINDOW* game3win = nullptr;
     
+     // void alignButton(BUTTON* butt, int h, int w);
+     bool isButtonsHidden;
+     void hideButton(BUTTON* b);
+     void alignButton(BUTTON* b);
+     
+     BUTTON* mainwinButtons[2] = {startbutt,exitbutt};
+     BUTTON* selecwinButtons[3] = {game1butt,game2butt,game3butt};
+     
     // void create_win(BLOCK* win); // create win and resize according stdscr
     // void handle_win(BLOCK); // handle already exist win size according stdscr
     
