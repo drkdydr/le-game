@@ -87,7 +87,11 @@ void Game::start(){
           
           if (ch == 27){
                int ch2 = wgetch(mainwin);
-               if(ch2 == -1) ch = 'i'; // check for ALT or ESC
+               if(ch2 == -1){
+                    ch = 'i'; // check for ALT or ESC
+               }else{
+                    ungetch(ch2);
+               }
                // if ALT set key to unfunctional key
           }
      
@@ -320,8 +324,14 @@ void Game::drawSelec(){
 }
 
 void Game::handlePause(int input){
+     
+     windowTitle = "PAUSED"; //process functionlarını bunu kaçınılmaz kılacak şekilde yazmışız da o yüzden
+     for(BUTTON* b : pauseButtons)
+          if (b->win == nullptr) alignButton(b);
+     
      const static int button_count = 2;
      static int curr_idx = 0;
+     
      switch(input){
           case KEY_UP : case 'w' : case 'k' :
                pauseButtons[curr_idx]->isSelected = false;
@@ -350,6 +360,7 @@ void Game::handlePause(int input){
                     inGame1 = inGame2 = inGame3 = false;
                     inSelect = true;
                     windowTitle = "SELECTION MENU";
+                    for(BUTTON* b : selecButtons) alignButton(b);
                }
                curr_idx = 0;
                resumebutt->isSelected = true; // çıkarken bulduğumuz gibi bırakalım.
@@ -358,6 +369,7 @@ void Game::handlePause(int input){
           default:
                break;
      }
+     drawPause();
 }
 void Game::drawPause(){
      printLogo(pause_logo,4);
