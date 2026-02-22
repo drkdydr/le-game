@@ -75,15 +75,10 @@ void Game::start(){
           
           if (exitWanted) break;
           
+          // flushinp();
           int ch = wgetch(mainwin);
           
           if (ch == KEY_RESIZE) alignWin();
-          
-          if (COLS < win_width || LINES < win_height){
-               // for(BUTTON* b : allButtons) hideButton(b);
-               resizeNotif();
-               continue;
-          }
           
           if (ch == 27){
                int ch2 = wgetch(mainwin);
@@ -93,6 +88,12 @@ void Game::start(){
                     ungetch(ch2);
                }
                // if ALT set key to unfunctional key
+          }
+          
+          if (COLS < win_width || LINES < win_height){
+               // for(BUTTON* b : allButtons) hideButton(b);
+               resizeNotif();
+               continue;
           }
      
           wclear(mainwin);
@@ -113,8 +114,9 @@ void Game::start(){
                inPause = game3->process(mainwin,ch); 
                //usr/include/c++/15/bits/stl_vector.h:1263: std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::operator[](size_type) [with _Tp = const char*; _Alloc = std::allocator<const char*>; reference = const char*&; size_type = long unsigned int]: Assertion '__n < this->size()' failed
           }
-          
-          usleep(10000);
+         
+          doupdate();
+          usleep(20000);
           tick++;
      }
      
@@ -127,7 +129,7 @@ void Game::alignWin(){
      int w = std::min(COLS, win_width);
      
      werase(mainwin);
-     wrefresh(mainwin);
+     wnoutrefresh(mainwin);
      
      wresize(mainwin,h,w);
      mvwin(mainwin, (LINES-h)/2, (COLS-w)/2);
@@ -140,7 +142,7 @@ void Game::alignWin(){
           for(BUTTON* b : pauseButtons) alignButton(b);
      
      touchwin(mainwin);
-     wrefresh(mainwin);
+     wnoutrefresh(mainwin);
      
 }
 
@@ -154,7 +156,7 @@ void Game::hideButton(BUTTON* b){
      
      b->isHidden = true;
      
-     // wrefresh(b->win); // dikkat et! sıkıntı çıkarabilir
+     // wnoutrefresh(b->win); // dikkat et! sıkıntı çıkarabilir
      
 }
 
@@ -174,7 +176,7 @@ void Game::alignButton(BUTTON* b){
      if (b->win != nullptr){ // if derwin throw ERR
           nodelay(b->win, true);
           werase(b->win);
-          wrefresh(b->win);
+          wnoutrefresh(b->win);
      }
      
      b->isHidden = false;
@@ -238,7 +240,7 @@ void Game::handleMain(int input){
 
 void Game::drawMain(){
      printLogo(game_logo,2);
-     wrefresh(mainwin);
+     wnoutrefresh(mainwin);
      exitbutt->drawButt();
      startbutt->drawButt();
 }
@@ -317,7 +319,7 @@ void Game::handleSelec(int input){
 
 void Game::drawSelec(){
      printLogo(select_logo,3);
-     wrefresh(mainwin);
+     wnoutrefresh(mainwin);
      game1butt->drawButt();
      game2butt->drawButt();
      game3butt->drawButt();
@@ -346,6 +348,12 @@ void Game::handlePause(int input){
           case KEY_ENTER : case '\n' : case ' ':
                if (resumebutt->isSelected){
                     inPause = false;
+                    if (inGame1)
+                         windowTitle = "SPACE SHOOTERS";
+                    else if (inGame2)
+                         windowTitle = "DINO GAME";
+                    else if (inGame3)
+                         windowTitle = "COMING SOON";
                }
                if (quitbutt->isSelected){
                     
@@ -359,6 +367,7 @@ void Game::handlePause(int input){
                     
                     inGame1 = inGame2 = inGame3 = false;
                     inSelect = true;
+                    inPause = false;
                     windowTitle = "SELECTION MENU";
                     for(BUTTON* b : selecButtons) alignButton(b);
                }
@@ -372,8 +381,6 @@ void Game::handlePause(int input){
      drawPause();
 }
 void Game::drawPause(){
-     printLogo(pause_logo,4);
-     wrefresh(mainwin);
      
      if(inGame1){
           game1->print(mainwin);
@@ -382,7 +389,9 @@ void Game::drawPause(){
      }else if (inGame3){
           game3->print(mainwin);
      }
-     wrefresh(mainwin);
+     wnoutrefresh(mainwin);
+     printLogo(pause_logo,4);
+     wnoutrefresh(mainwin);
      
      resumebutt->drawButt();
      quitbutt->drawButt();
@@ -414,7 +423,7 @@ void bold_box(WINDOW* win){
 
      // Apply the border to the window
      wborder_set(win, &ls, &rs, &ts, &bs, &tl, &tr, &bl, &br);
-     // wrefresh(win); // zaten redraw içinde wrefresh ediyoruz.
+     // wnoutrefresh(win); // zaten redraw içinde wnoutrefresh ediyoruz.
 }
 
 BUTTON::BUTTON(WINDOW* parent, char* cont, int rel_y_){
@@ -440,7 +449,7 @@ void BUTTON::drawButt(){
      if(isHidden || win == nullptr) return;
      
      werase(win);
-     wrefresh(win);
+     wnoutrefresh(win);
      
      if (isSelected){
           wattron(win, A_BOLD);
@@ -454,6 +463,6 @@ void BUTTON::drawButt(){
      int text_x = (default_width - static_cast<int>(content.size())) / 2;
      
      mvwprintw(win,text_y,text_x,"%s",content.c_str());
-     wrefresh(this->win);
+     wnoutrefresh(this->win);
      
 }

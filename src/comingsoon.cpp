@@ -21,7 +21,7 @@ void ComingSoon::print(WINDOW* &win){
           mvwprintw(win,curr_y++, (win_w - (static_cast<int>(strlen(line))))/2,"%s",line);
           
      mvwprintw(win,++curr_y, (win_w - (static_cast<int>(strlen(message))))/2,"%s",message);
-     wrefresh(win);
+     wnoutrefresh(win);
 }
 
 void ComingSoon::reset(){
