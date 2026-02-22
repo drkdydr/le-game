@@ -48,7 +48,7 @@ class Game{
      // 0 : for main-logo 1 : for select logo 
      // (if i want to add new logos i will switch id's data type to integer.)
      
-     char* windowTitle;
+     const char* windowTitle;
      
      bool exitWanted = false;
      

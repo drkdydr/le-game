@@ -39,7 +39,7 @@ void Game::start(){
      
      windowTitle = "MAIN MENU";
      
-     mainwin = newwin(0,1,0,0);
+     mainwin = newwin(0,0,0,0);
      
      alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
      
@@ -47,12 +47,14 @@ void Game::start(){
      exitbutt = new BUTTON(mainwin,"EXIT",14);
      
      game1butt = new BUTTON(mainwin,"SPACE SHOOTERS",8);
-     game2butt = new BUTTON(mainwin,"SPACE SHOOTERS",11);
-     game3butt = new BUTTON(mainwin,"SPACE SHOOTERS",14);
+     game2butt = new BUTTON(mainwin,"DINO GAME",11);
+     game3butt = new BUTTON(mainwin,"COMING SOON",14);
      
      allButtons = {startbutt, exitbutt, game1butt, game2butt, game3butt};
      mainButtons = {startbutt, exitbutt};
      selecButtons = {game1butt, game2butt, game3butt};
+     
+     // alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
      
      startbutt->isSelected = true;
      game1butt->isSelected = true;
@@ -72,7 +74,7 @@ void Game::start(){
           if (ch == KEY_RESIZE) alignWin();
           
           if (COLS < win_width || LINES < win_height){
-               for(BUTTON* b : allButtons) hideButton(b);
+               // for(BUTTON* b : allButtons) hideButton(b);
                resizeNotif();
                continue;
           }
@@ -88,7 +90,7 @@ void Game::start(){
               handleSelec(ch); // sorun burada. (ok tuşlarında seg fault yiyok.) + (hiçbir tuşa basmasak da spaceshooters'a geçiyor.)
           }
           
-          usleep(10000);
+          usleep(100000);
           tick++;
           
           // if (inGame1 || inGame2 || inGame3) break;
@@ -100,44 +102,61 @@ void Game::start(){
 
 void Game::alignWin(){
      
-     clear();
-     refresh();
-     
      int h = std::min(LINES, win_height);
      int w = std::min(COLS, win_width);
      
      werase(mainwin);
+     wrefresh(mainwin);
+     
      mvwin(mainwin, (LINES-h)/2, (COLS-w)/2);
      wresize(mainwin,h,w);
      
      if (inMain)
           for(BUTTON* b : mainButtons) alignButton(b);
      else if (inSelect)
-          for(BUTTON* b : mainButtons) alignButton(b);
+          for(BUTTON* b : selecButtons) alignButton(b);
+     
+     touchwin(mainwin);
+     wrefresh(mainwin);
      
 }
 
 void Game::hideButton(BUTTON* b){
-     if (b == nullptr || b->isHidden) return;
+     if (b == nullptr) return;
      
-     werase(b->win);
-     wrefresh(b->win);
-     mvderwin(b->win,0,0);
-     wresize(b->win,0,0);
+     if (b->win != nullptr){ //subwinleri move yapmak seg faultlara veya bende olduğu gibi stdscr'de 0,0'a gitmelerine sebep olabiliyormuş.
+          delwin(b->win);
+          b->win = nullptr;
+     }
+     
      b->isHidden = true;
+     
      // wrefresh(b->win); // dikkat et! sıkıntı çıkarabilir
+     
 }
 
 void Game::alignButton(BUTTON* b){
+     
      if (b == nullptr) return;
+     
+     if (b->win != nullptr) {
+          delwin(b->win);
+          b->win = nullptr;
+     }
+     
      int main_w = getmaxx(mainwin);
      
-     werase(b->win);
-     wrefresh(b->win);
-     wresize(b->win,b->default_height,b->default_width);
-     mvderwin(b->win, b->rel_y, (main_w - b->default_width)/2);
-     if (b->isHidden) b->isHidden = false;
-     // wrefresh(b->win);
+     b->win = derwin(mainwin, b->default_height, b->default_width,b->rel_y, (main_w - b->default_width)/2 );
+     
+     if (b->win != nullptr){ // if derwin throw ERR
+          nodelay(b->win, true);
+          werase(b->win);
+          wrefresh(b->win);
+     }
+     
+     
+     b->isHidden = false;
+     
 }
 
 void Game::resizeNotif(){ // acaba daha iyi nasıl yazabilirdim?
@@ -177,6 +196,8 @@ void Game::handleMain(int input){
                     inMain = false;
                     inSelect = true;
                     windowTitle = "SELECTION MENU";
+                    for(BUTTON* b : mainButtons) hideButton(b);
+                    for(BUTTON* b : selecButtons) alignButton(b);
                }
                else if (exitbutt->isSelected){
                     exitWanted = true;
@@ -195,8 +216,8 @@ void Game::handleMain(int input){
 void Game::drawMain(){
      printLogo(game_logo,2);
      wrefresh(mainwin);
-     startbutt->drawButt();
      exitbutt->drawButt();
+     startbutt->drawButt();
 }
 
 void Game::printLogo(std::vector<const char*> &logo, int y_idx){
@@ -214,7 +235,6 @@ void Game::handleSelec(int input){
      
      const static int button_count = 3;
      static int curr_idx = 0;
-     static BUTTON* selecButtons[button_count] = {game1butt,game2butt,game3butt};
      
      switch(input){
           case KEY_UP : case 'w' : case 'k' :
@@ -230,35 +250,44 @@ void Game::handleSelec(int input){
           case KEY_ENTER : case ' ': case '\n': 
           // KEY_ENTER numpad'deki enter tuşunu
           // \n ise klavyedeki enter'ı temsil ediyormuş.
+               BUTTON* selected;
                if (game1butt->isSelected){
+                    selected = game1butt;
                     inSelect = false;
                     inGame1 = true;
-                    windowTitle = "SPACE SHOOTERS";
                }
                if (game2butt->isSelected){
+                    selected = game2butt;
                     inSelect = false;
                     inGame2 = true;
-                    windowTitle = "DINO GAME";
                }
                if (game3butt->isSelected){
+                    selected = game3butt;
                     inSelect = false;
                     inGame3 = true;
-                    windowTitle = "COMING SOON";
                }
+               windowTitle = selected->content.c_str();
           break;
           case 'q' :
                inSelect = false;
                inMain = true;
                windowTitle = "MAIN MENU";
+               for(BUTTON* b : selecButtons) hideButton(b);
+               for(BUTTON* b : mainButtons) alignButton(b);
           break;
           default:
           break;
      }
      drawSelec();
-     usleep(100000);
 }
 
-void Game::drawSelec(){}
+void Game::drawSelec(){
+     printLogo(select_logo,3);
+     wrefresh(mainwin);
+     game1butt->drawButt();
+     game2butt->drawButt();
+     game3butt->drawButt();
+}
 
 int findDigits(int num){
      if (num < 0) return findDigits(-num);
@@ -301,19 +330,30 @@ BUTTON::BUTTON(WINDOW* parent, char* cont, int rel_y_){
      
      // win = derwin(parent, 0, 0, 0, 0); // mainwin size independant
      // newwin(0,0,0,0) tam ekran window oluşturuyormuş.
-     win = derwin(parent,1,0,0,0);
+     win = derwin(parent,0,0,0,0);
      
      nodelay(win,true);
 }
 
 void BUTTON::drawButt(){
+     
+     if(isHidden || win == nullptr) return;
+     
+     werase(win);
+     wrefresh(win);
+     
      if (isSelected){
           wattron(win, A_BOLD);
           bold_box(win);
-     }else{
           wattroff(win,A_BOLD);
+     }else{
           box(win,0,0);
      }
-     mvwprintw(win,rel_y,(default_width-static_cast<int>(content.size()))/2,"%s",content.c_str());
+     
+     int text_y = default_height / 2;
+     int text_x = (default_width - static_cast<int>(content.size())) / 2;
+     
+     mvwprintw(win,text_y,text_x,"%s",content.c_str());
      wrefresh(this->win);
+     
 }
