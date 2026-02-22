@@ -5,7 +5,9 @@
 #include <ncurses.h>
 #include <string>
 #include <vector>
-#include "entities.h"
+#include "spaceshooters.h"
+#include "dinogame.h"
+#include "comingsoon.h"
 
 int findDigits(int num);
 
@@ -29,6 +31,11 @@ struct BUTTON {
 };
 
 class Game{
+     
+     friend class SpaceShooters;
+     friend class DinoGame;
+     friend class ComingSoon;
+     
      std::vector<const char*> game_logo = {"$$\\         $$\\  $$$$$$\\   $$$$$$\\  $$\\      $$\\ $$$$$$$$\\ ",
                                            "$$ |        $  |$$  __$$\\ $$  __$$\\ $$$\\    $$$ |$$  _____|",
                                            "$$ | $$$$$$\\\\_/ $$ /  \\__|$$ /  $$ |$$$$\\  $$$$ |$$ |      ",
@@ -36,13 +43,22 @@ class Game{
                                            "$$ |$$$$$$$$ |  $$ |\\_$$ |$$  __$$ |$$ \\$$$  $$ |$$  __|   ",
                                            "$$ |$$   ____|  $$ |  $$ |$$ |  $$ |$$ |\\$  /$$ |$$ |      ",
                                            "$$ |\\$$$$$$$\\   \\$$$$$$  |$$ |  $$ |$$ | \\_/ $$ |$$$$$$$$\\ ",
-                                           "\\__| \\_______|   \\______/ \\__|  \\__|\\__|     \\__|\\________|",};
+                                           "\\__| \\_______|   \\______/ \\__|  \\__|\\__|     \\__|\\________|"
+     };
      
      
      std::vector<const char*> select_logo =   {" _____ _____ __    _____ _____ _____ _ ",
                                                "|   __|   __|  |  |   __|     |_   _|_|",
                                                "|__   |   __|  |__|   __|   --| | |  _ ",
-                                               "|_____|_____|_____|_____|_____| |_| |_|"};
+                                               "|_____|_____|_____|_____|_____| |_| |_|"
+     };
+     
+     std::vector<const char*> pause_logo = {                                     
+                                             " _____ _____ _____ _____ _____ ____  ",
+                                             "|  _  |  _  |  |  |   __|   __|    \\ ",
+                                             "|   __|     |  |  |__   |   __|  |  |",
+                                             "|__|  |__|__|_____|_____|_____|____/ "
+     };
      
      void printLogo(std::vector<const char*> &logo, int y_idx);
      // 0 : for main-logo 1 : for select logo 
@@ -54,6 +70,7 @@ class Game{
      
      bool inMain = true;
      bool inSelect = false;
+     bool inPause = false;
      bool inGame1 = false;
      bool inGame2 = false;
      bool inGame3 = false;
@@ -79,19 +96,31 @@ class Game{
           BUTTON* game2butt = nullptr; 
           BUTTON* game3butt = nullptr;
           
+     void handlePause(int input);
+     void drawPause();
+          BUTTON* resumebutt = nullptr;
+          BUTTON* quitbutt = nullptr;
+          
      // void alignButton(BUTTON* butt, int h, int w);
      bool isButtonsHidden;
      void hideButton(BUTTON* b);
      void alignButton(BUTTON* b);
     
     std::vector<BUTTON*> allButtons;
-    std::vector<BUTTON*> selecButtons;
     std::vector<BUTTON*> mainButtons;
-     
+    std::vector<BUTTON*> selecButtons;
+    std::vector<BUTTON*> pauseButtons;
+    
+    
+    SpaceShooters* game1;
+    DinoGame* game2;
+    ComingSoon* game3;
+    
     // void create_win(BLOCK* win); // create win and resize according stdscr
     // void handle_win(BLOCK); // handle already exist win size according stdscr
     
      void alignWin(); // bunun başına block constructor yaptığımda zaten iki fonksiyonu da elde edeceğim.
+     
      
      public:
      void initialize();

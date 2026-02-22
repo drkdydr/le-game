@@ -10,16 +10,14 @@
 #include <vector>
 
 //todo :
-// window size değişince "var olan tüm button'ların" size ve pozisyonlarının buna uygun şekilde değişmesini sağla
-// başka bir sorun daha vardı fakat hatırlamıyorum start içine bak wrefresh ve box işlemleri yeterince optimize gelmedi (eğer optimize bu demekse hemen bir bakayım.)
-// evet bu demekmiş (var olan en iyi haline getirme)
+// warninglerden kurtul.
+// space shooters class'ı oluştur ve oyunu orada yaz.
+// main menu falan sadece ekran boyutu falan değiştiği zaman değişsin
+// butonlarda dalgalanma oluyor.
+// butonlar sadece switch sırasında tekrar yazılsın istiyorum.
 
-// handleSelect'te ok tuşlarını kullandığımda (yani butonlara erişmeye çalıştığımda) seg fault yiyorum.
-// büyük ihtimalle butonlarla ilgili olan sıkıntı da bu yüzdendi
-
-// ekrana butonları düzgünce yazdırmanın yolunu bul.
-
-//space shooters class'ı oluştur ve oyunu orada yaz.
+//fikri unutmamak için yazıyorum:
+// main ve select menuler 
 
 void Game::initialize(){
      
@@ -29,13 +27,6 @@ void Game::initialize(){
      cbreak();
      noecho();
      curs_set(0); // makes cursor invisible
-     
-     
-}
-
-void Game::start(){
-     
-     // inMain = true; // initialized in game.h already
      
      windowTitle = "MAIN MENU";
      
@@ -50,18 +41,33 @@ void Game::start(){
      game2butt = new BUTTON(mainwin,"DINO GAME",11);
      game3butt = new BUTTON(mainwin,"COMING SOON",14);
      
-     allButtons = {startbutt, exitbutt, game1butt, game2butt, game3butt};
+     resumebutt = new BUTTON(mainwin,"RESUME",9);
+     quitbutt = new BUTTON(mainwin,"QUIT",12);
+     
+     allButtons = {startbutt, exitbutt, game1butt, game2butt, game3butt, resumebutt, quitbutt};
      mainButtons = {startbutt, exitbutt};
      selecButtons = {game1butt, game2butt, game3butt};
+     pauseButtons = {resumebutt, quitbutt};
      
      // alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
      
      startbutt->isSelected = true;
      game1butt->isSelected = true;
+     resumebutt->isSelected = true;
+     
+     game1 = new SpaceShooters();
+     game2 = new DinoGame();
+     game3 = new ComingSoon();
      
      // nodelay(stdscr,true);
-     nodelay(mainwin,true); //nodelay'i açtığım için şimdi tick mantığı vs eklemem lazım.
+     nodelay(mainwin,true);
      keypad(mainwin,true);
+     
+}
+
+void Game::start(){
+     
+     // inMain = true; // initialized in game.h already
      
      long tick = 0;
      
@@ -78,23 +84,34 @@ void Game::start(){
                resizeNotif();
                continue;
           }
+          
+          if (ch == 27){
+               int ch2 = wgetch(mainwin);
+               if(ch2 == -1) ch = 'i'; // check for ALT or ESC
+               // if ALT set key to unfunctional key
+          }
      
           wclear(mainwin);
           box(mainwin,0,0);
           mvwprintw(mainwin,0,1," %s ", windowTitle);
-          // wrefresh(mainwin);
           
-          if (inMain){ //sıkıntı burada
+          if (inMain){ 
                handleMain(ch);
           } else if (inSelect){
-              handleSelec(ch); // sorun burada. (ok tuşlarında seg fault yiyok.) + (hiçbir tuşa basmasak da spaceshooters'a geçiyor.)
+              handleSelec(ch);
+          } else if (inPause){
+              handlePause(ch); 
+          } else if (inGame1){
+               inPause = game1->process(mainwin,ch);
+          } else if (inGame2){
+               inPause = game2->process(mainwin,ch);
+          } else if (inGame3){
+               inPause = game3->process(mainwin,ch); 
+               //usr/include/c++/15/bits/stl_vector.h:1263: std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::operator[](size_type) [with _Tp = const char*; _Alloc = std::allocator<const char*>; reference = const char*&; size_type = long unsigned int]: Assertion '__n < this->size()' failed
           }
           
-          usleep(100000);
+          usleep(10000);
           tick++;
-          
-          // if (inGame1 || inGame2 || inGame3) break;
-          
      }
      
      endwin();
@@ -108,13 +125,15 @@ void Game::alignWin(){
      werase(mainwin);
      wrefresh(mainwin);
      
-     mvwin(mainwin, (LINES-h)/2, (COLS-w)/2);
      wresize(mainwin,h,w);
+     mvwin(mainwin, (LINES-h)/2, (COLS-w)/2);
      
      if (inMain)
           for(BUTTON* b : mainButtons) alignButton(b);
      else if (inSelect)
           for(BUTTON* b : selecButtons) alignButton(b);
+     else if (inPause)
+          for(BUTTON* b : pauseButtons) alignButton(b);
      
      touchwin(mainwin);
      wrefresh(mainwin);
@@ -154,7 +173,6 @@ void Game::alignButton(BUTTON* b){
           wrefresh(b->win);
      }
      
-     
      b->isHidden = false;
      
 }
@@ -179,15 +197,13 @@ void Game::resizeNotif(){ // acaba daha iyi nasıl yazabilirdim?
 }
 
 void Game::handleMain(int input){
+     const static int button_count = 2;
+     static int curr_idx = 0;
      switch(input){
           case KEY_UP : case 'w' : case 'k' : case KEY_DOWN : case 's' : case 'j': // aga ikisi de aynı şeye varıyor.
-               if (startbutt->isSelected){
-                    startbutt->isSelected = false;
-                    exitbutt->isSelected = true;
-               }else{
-                    exitbutt->isSelected = false;
-                    startbutt->isSelected = true;
-               }
+               mainButtons[curr_idx]->isSelected = false;
+               curr_idx = (curr_idx + 1) % button_count;
+               mainButtons[curr_idx]->isSelected = true;
                break;
           case KEY_ENTER : case ' ': case '\n': 
           // KEY_ENTER numpad'deki enter tuşunu
@@ -203,6 +219,9 @@ void Game::handleMain(int input){
                     exitWanted = true;
                     return;
                }
+               curr_idx = 0;
+               startbutt->isSelected = true;
+               quitbutt->isSelected = false; // redundant but I wanted to keep.
                break;
           case 'q' :
                exitWanted = true;
@@ -252,28 +271,39 @@ void Game::handleSelec(int input){
           // \n ise klavyedeki enter'ı temsil ediyormuş.
                BUTTON* selected;
                if (game1butt->isSelected){
+                    game1butt->isSelected = false;
                     selected = game1butt;
                     inSelect = false;
                     inGame1 = true;
                }
                if (game2butt->isSelected){
+                    game2butt->isSelected = false;
                     selected = game2butt;
                     inSelect = false;
                     inGame2 = true;
                }
                if (game3butt->isSelected){
+                    game3butt->isSelected = false;
                     selected = game3butt;
                     inSelect = false;
                     inGame3 = true;
                }
                windowTitle = selected->content.c_str();
+               game1butt->isSelected = true;
+               curr_idx = 0;
           break;
           case 'q' :
+               curr_idx = 0;
+               game1butt->isSelected = true;
+               game2butt->isSelected = false;
+               game3butt->isSelected = false;
+               
                inSelect = false;
                inMain = true;
                windowTitle = "MAIN MENU";
                for(BUTTON* b : selecButtons) hideButton(b);
                for(BUTTON* b : mainButtons) alignButton(b);
+               
           break;
           default:
           break;
@@ -287,6 +317,63 @@ void Game::drawSelec(){
      game1butt->drawButt();
      game2butt->drawButt();
      game3butt->drawButt();
+}
+
+void Game::handlePause(int input){
+     const static int button_count = 2;
+     static int curr_idx = 0;
+     switch(input){
+          case KEY_UP : case 'w' : case 'k' :
+               pauseButtons[curr_idx]->isSelected = false;
+               curr_idx = (curr_idx + 1) % button_count;
+               pauseButtons[curr_idx]->isSelected = true;
+               break;
+          case KEY_DOWN : case 's' : case 'j':
+               pauseButtons[curr_idx]->isSelected = false;
+               curr_idx = (curr_idx + button_count - 1) % button_count;
+               pauseButtons[curr_idx]->isSelected = true;
+               break;
+          case KEY_ENTER : case '\n' : case ' ':
+               if (resumebutt->isSelected){
+                    inPause = false;
+               }
+               if (quitbutt->isSelected){
+                    
+                    if(inGame1){
+                         game1->reset();
+                    }else if (inGame2){
+                         game2->reset();
+                    }else if (inGame3){
+                         game3->reset();
+                    }
+                    
+                    inGame1 = inGame2 = inGame3 = false;
+                    inSelect = true;
+                    windowTitle = "SELECTION MENU";
+               }
+               curr_idx = 0;
+               resumebutt->isSelected = true; // çıkarken bulduğumuz gibi bırakalım.
+               quitbutt->isSelected = false;
+               break;
+          default:
+               break;
+     }
+}
+void Game::drawPause(){
+     printLogo(pause_logo,4);
+     wrefresh(mainwin);
+     
+     if(inGame1){
+          game1->print(mainwin);
+     }else if (inGame2){
+          game2->print(mainwin);
+     }else if (inGame3){
+          game3->print(mainwin);
+     }
+     wrefresh(mainwin);
+     
+     resumebutt->drawButt();
+     quitbutt->drawButt();
 }
 
 int findDigits(int num){
@@ -330,7 +417,8 @@ BUTTON::BUTTON(WINDOW* parent, char* cont, int rel_y_){
      
      // win = derwin(parent, 0, 0, 0, 0); // mainwin size independant
      // newwin(0,0,0,0) tam ekran window oluşturuyormuş.
-     win = derwin(parent,0,0,0,0);
+     // win = derwin(parent,0,0,0,0);
+     win = nullptr;
      
      nodelay(win,true);
 }

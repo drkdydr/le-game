@@ -1,7 +1,7 @@
-#include "spaceshooters.h"
+#include "dinogame.h"
 #include <ncurses.h>
 
-bool SpaceShooters::process(WINDOW* &win, int input){
+bool DinoGame::process(WINDOW* &win, int input){
      switch(input){
           case 27 : case 'q':
                return true;
@@ -9,10 +9,10 @@ bool SpaceShooters::process(WINDOW* &win, int input){
           default :
                return false;
      }
+     print(win);
 }
 
-void SpaceShooters::print(WINDOW* &win){
-}
+void DinoGame::print(WINDOW* &win){}
 
-void SpaceShooters::reset(){
+void DinoGame::reset(){
 }

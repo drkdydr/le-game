@@ -1,15 +1,12 @@
-#ifndef SPACESHOOTERS_H
-#define SPACESHOOTERS_H
+#ifndef DINOGAME_H
+#define DINOGAME_H
 
 #include <ncurses.h>
-
-
-class SpaceShooters{
-     
+class DinoGame{
      public:
           bool process(WINDOW* &win, int input);
           void print(WINDOW* &win);
-          void reset(); // will reset the game.
+          void reset();
 };
 
 #endif
