@@ -18,7 +18,7 @@
 
 void Game::initialize(){
      
-     setlocale(LC_ALL, ""); //for unicode char display
+     setlocale(LC_ALL, ""); //for unicode char display (bold box characters)
      
      initscr();
      cbreak();
@@ -29,7 +29,7 @@ void Game::initialize(){
      
      mainwin = newwin(0,0,0,0);
      
-     alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
+     // alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
      
      game1 = new SpaceShooters(mainwin);
      // game2 = new DinoGame();
@@ -53,7 +53,7 @@ void Game::initialize(){
      selecButtons = {game1butt, game2butt, game3butt};
      pauseButtons = {resumebutt, restartbutt, quitbutt};
      
-     // alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
+     alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
      
      startbutt->isSelected = true;
      game1butt->isSelected = true;
@@ -68,8 +68,6 @@ void Game::initialize(){
 void Game::start(){
      
      // inMain = true; // initialized in game.h already
-     
-     long tick = 0;
      
      while(true){
           
@@ -86,7 +84,9 @@ void Game::start(){
                int ch2 = wgetch(mainwin);
                if(ch2 != ERR){
                     ungetch(ch2);
+                    ch = 'i';
                }else{
+                    // ungetch(ch2);
                     escDetected = true;
                }
                // if ALT set key to unfunctional key
@@ -108,7 +108,7 @@ void Game::start(){
           } else if (inPause){
               handlePause(ch); 
           } else if (inGame1){
-               inPause = game1->process(ch, escDetected);
+               inPause = game1->process(ch);
           } else if (inGame2){
                inPause = game2->process(mainwin,ch);
           } else if (inGame3){
@@ -117,7 +117,6 @@ void Game::start(){
          
           doupdate();
           usleep(20000);
-          tick++;
      }
      
      endwin();
@@ -229,11 +228,8 @@ void Game::handleMain(int input){
                startbutt->isSelected = true;
                quitbutt->isSelected = false; // redundant but I wanted to keep.
                break;
-          case 'q' :
+          case 'q' :case 27:
                exitWanted = true;
-               return;
-          case 27:
-               if (escDetected) exitWanted = true;
                return;
           default:
                break;
@@ -278,7 +274,10 @@ void Game::handleSelec(int input){
           case KEY_ENTER : case ' ': case '\n': 
           // KEY_ENTER numpad'deki enter tuşunu
           // \n ise klavyedeki enter'ı temsil ediyormuş.
+               for(BUTTON* b : selecButtons) hideButton(b);
+               
                BUTTON* selected;
+               
                if (game1butt->isSelected){
                     game1butt->isSelected = false;
                     selected = game1butt;
@@ -302,7 +301,6 @@ void Game::handleSelec(int input){
                curr_idx = 0;
           break;
           case 'q' : case 27:
-               if (input == 27 && !escDetected) return;
                curr_idx = 0;
                game1butt->isSelected = true;
                game2butt->isSelected = false;
@@ -333,7 +331,7 @@ void Game::handlePause(int input){
      
      windowTitle = pauseName; //process functionlarını bunu kaçınılmaz kılacak şekilde yazmışız da o yüzden
      for(BUTTON* b : pauseButtons)
-          if (b->win == nullptr) alignButton(b);
+          alignButton(b);
      
      const static int button_count = 3;
      static int curr_idx = 0;
@@ -349,38 +347,61 @@ void Game::handlePause(int input){
                curr_idx = (curr_idx + button_count - 1) % button_count;
                pauseButtons[curr_idx]->isSelected = true;
                break;
-          case KEY_ENTER : case '\n' : case ' ': case 'q': case 27:
-               if (input == 27 && !escDetected) return;
-               if (resumebutt->isSelected && input != 'q' && input != 27){
-                    inPause = false;
+          case KEY_ENTER : case '\n' : case ' ':
+               if (!quitbutt->isSelected){
+                    
                     if (inGame1)
                          windowTitle = game1->getName();
                     else if (inGame2)
                          windowTitle = game2->getName();
                     else if (inGame3)
                          windowTitle = game3->getName();
+                    
+                    if(restartbutt->isSelected){
+                         if(inGame1)
+                              game1->reset();
+                         else if (inGame2)
+                              game2->reset();
+                         else if (inGame3)
+                              game3->reset();
+                    }
+                    
                }else{
-                    if(inGame1){
-                         if (restartbutt->isSelected) windowTitle = game1->getName();
+                    
+                    if(inGame1)
                          game1->reset();
-                    }else if (inGame2){
-                         if (restartbutt->isSelected) windowTitle = game2->getName();
+                    else if (inGame2)
                          game2->reset();
-                    }else if (inGame3){
-                         if (restartbutt->isSelected) windowTitle = game3->getName();
+                    else if (inGame3)
                          game3->reset();
-                    }
                     
-                    if(quitbutt->isSelected || input == 'q' || input == 27){
-                         
-                         inGame1 = inGame2 = inGame3 = false;
-                         inSelect = true;
-                         windowTitle = selecName;
-                         for(BUTTON* b : selecButtons) alignButton(b);
-                         
-                    }
-                    
+                   inGame1 = inGame2 = inGame3 = false; 
+                   inSelect = true;
+                   windowTitle = selecName;
+                   
+                   for(BUTTON* b : pauseButtons) hideButton(b);
+                   for(BUTTON* b : selecButtons) alignButton(b);
+                   
                }
+               inPause = false;
+               curr_idx = 0;
+               resumebutt->isSelected = true; // çıkarken bulduğumuz gibi bırakalım.
+               restartbutt->isSelected = false;
+               quitbutt->isSelected = false;
+               break;
+               
+          case 'q': case 27:
+          
+               if(inGame1)
+                    game1->reset();
+               else if (inGame2)
+                    game2->reset();
+               else if (inGame3)
+                    game3->reset();
+                    
+               inGame1 = inGame2 = inGame3 = false; 
+               inSelect = true;
+               windowTitle = selecName;
                
                inPause = false;
                curr_idx = 0;
@@ -388,11 +409,9 @@ void Game::handlePause(int input){
                restartbutt->isSelected = false;
                quitbutt->isSelected = false;
                
-               inPause = false;
-               curr_idx = 0;
-               resumebutt->isSelected = true; // çıkarken bulduğumuz gibi bırakalım.
-               restartbutt->isSelected = false;
-               quitbutt->isSelected = false;
+               for(BUTTON* b : pauseButtons) hideButton(b);
+               for(BUTTON* b : selecButtons) alignButton(b);
+               
                break;
                
           default:
@@ -400,6 +419,7 @@ void Game::handlePause(int input){
      }
      drawPause();
 }
+
 void Game::drawPause(){
      
      if(inGame1){

@@ -30,6 +30,8 @@ struct BUTTON {
      
 };
 
+const int win_width= 75, win_height = 18;
+
 class Game{
      
      friend class SpaceShooters;
@@ -82,7 +84,6 @@ class Game{
      bool inGame2 = false;
      bool inGame3 = false;
      
-     int win_width= 75 , win_height = 18;
      int lastLINES, lastCOLS; // window size değişmiş mi kontrol için
     
      void resizeNotif();

@@ -12,7 +12,7 @@ class ComingSoon {
           "|   --|  |  | | | |-   -| | | |  |  |  |__   |  |  |  |  | | | |",
           "|_____|_____|_|_|_|_____|_|___|_____|  |_____|_____|_____|_|___|"
      };
-     const char* message = "This game is not currently available wait for future updates!";
+     const char* message = "This game is not currently available, wait for future updates!";
      
      public:
           const char* getName();

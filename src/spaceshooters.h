@@ -4,6 +4,12 @@
 #include <ncurses.h>
 #include <vector>
 
+class Entity;
+class Enemy;
+class EnemyBullet;
+class Player;
+class PlayerBullet;
+
 enum DIRECTIONS {
      LEFT,
      RIGHT,
@@ -17,41 +23,63 @@ class Entity {
      Entity(WINDOW* &win, int y, int x);
 };
 
+class EnemyBullet : public Entity {
+     friend class Player;
+     const int speed = 1; //1
+     char look = '*';
+     public:
+     EnemyBullet(WINDOW* &win, int y, int x);
+     bool move();
+     void draw() const;
+};
+
 class Enemy : public Entity {
+     bool isDead = false;
+     const int width = 5;
+     const int height = 2;
      std::vector<const char*> look = {
           "|/-\\|",
           "|\\-/|"
      };
      public:
      Enemy(WINDOW* &win, int y, int x);
+     EnemyBullet* shoot();
+     void reset();
+     void die();
+     bool doesHit(PlayerBullet* pb) const;
      void draw() const;
 };
 
-class EnemyBullet : public Entity {
-     char look = '*';
+class PlayerBullet : public Entity {
+     friend class Enemy;
+     const int speed = 2; //2
+     char look = '^';
      public:
-     EnemyBullet(WINDOW* &win, int y, int x);
-     void die();
+     PlayerBullet(WINDOW* &win, int y, int x);
+     bool move();
      void draw() const;
 };
 
 class Player : public Entity {
+     const int width = 7;
+     const int height = 3;
+     
+     const char wing = '|';
+     
+     const int speed = 3; //3
+     
+     
      std::vector<const char*> look = {
-          "|     |",
           "|\\/^\\/|",
           "' \\-/ '"
      };
      public:
      Player(WINDOW* &win, int y, int x);
      void move(DIRECTIONS d);
+     PlayerBullet* shoot();
+     void reset();
+     bool doesHit(EnemyBullet* eb) const;
      void die();
-     void draw() const;
-};
-
-class PlayerBullet : public Entity {
-     char look = '^';
-     public:
-     PlayerBullet(WINDOW* &win, int y, int x);
      void draw() const;
 };
 
@@ -59,6 +87,7 @@ class PlayerBullet : public Entity {
 class SpaceShooters{
      
      int lives = 3;
+     int tick;
      
      // bool didWin = false;
      // bool didDie = false; // buralardan victory ya da game over screen'e falan atıcam.
@@ -75,14 +104,19 @@ class SpaceShooters{
      void printEnemyBullets();
      void printPlayerBullets();
      
+     void printGameOver();
+     void printVictory();
+     
      WINDOW* win;
      
      public:
           SpaceShooters(WINDOW* &win);
-          bool process(int input, bool escDetected);
+          ~SpaceShooters();
+          bool process(int input);
           void print();
           void reset(); // will reset the game.
           const char* getName();
+
 };
 
 #endif
