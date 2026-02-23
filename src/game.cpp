@@ -41,13 +41,14 @@ void Game::initialize(){
      game2butt = new BUTTON(mainwin,"DINO GAME",11);
      game3butt = new BUTTON(mainwin,"COMING SOON",14);
      
-     resumebutt = new BUTTON(mainwin,"RESUME",9);
-     quitbutt = new BUTTON(mainwin,"QUIT",12);
+     resumebutt = new BUTTON(mainwin,"RESUME",7);
+     restartbutt = new BUTTON(mainwin,"RESTART",10);
+     quitbutt = new BUTTON(mainwin,"QUIT",13);
      
      allButtons = {startbutt, exitbutt, game1butt, game2butt, game3butt, resumebutt, quitbutt};
      mainButtons = {startbutt, exitbutt};
      selecButtons = {game1butt, game2butt, game3butt};
-     pauseButtons = {resumebutt, quitbutt};
+     pauseButtons = {resumebutt, restartbutt, quitbutt};
      
      // alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
      
@@ -55,7 +56,7 @@ void Game::initialize(){
      game1butt->isSelected = true;
      resumebutt->isSelected = true;
      
-     game1 = new SpaceShooters();
+     game1 = new SpaceShooters(mainwin);
      game2 = new DinoGame();
      game3 = new ComingSoon();
      
@@ -107,7 +108,7 @@ void Game::start(){
           } else if (inPause){
               handlePause(ch); 
           } else if (inGame1){
-               inPause = game1->process(mainwin,ch);
+               inPause = game1->process(ch);
           } else if (inGame2){
                inPause = game2->process(mainwin,ch);
           } else if (inGame3){
@@ -331,16 +332,16 @@ void Game::handlePause(int input){
      for(BUTTON* b : pauseButtons)
           if (b->win == nullptr) alignButton(b);
      
-     const static int button_count = 2;
+     const static int button_count = 3;
      static int curr_idx = 0;
      
      switch(input){
-          case KEY_UP : case 'w' : case 'k' :
+          case KEY_DOWN : case 's' : case 'j':
                pauseButtons[curr_idx]->isSelected = false;
                curr_idx = (curr_idx + 1) % button_count;
                pauseButtons[curr_idx]->isSelected = true;
                break;
-          case KEY_DOWN : case 's' : case 'j':
+          case KEY_UP : case 'w' : case 'k' :
                pauseButtons[curr_idx]->isSelected = false;
                curr_idx = (curr_idx + button_count - 1) % button_count;
                pauseButtons[curr_idx]->isSelected = true;
@@ -354,27 +355,44 @@ void Game::handlePause(int input){
                          windowTitle = "DINO GAME";
                     else if (inGame3)
                          windowTitle = "COMING SOON";
-               }
-               if (quitbutt->isSelected){
-                    
+               }else{
+                    quit:
                     if(inGame1){
+                         if (restartbutt->isSelected) windowTitle = "SPACE SHOOTERS";
                          game1->reset();
                     }else if (inGame2){
+                         if (restartbutt->isSelected) windowTitle = "DINO GAME";
                          game2->reset();
                     }else if (inGame3){
+                         if (restartbutt->isSelected) windowTitle = "COMING SOON";
                          game3->reset();
                     }
                     
-                    inGame1 = inGame2 = inGame3 = false;
-                    inSelect = true;
-                    inPause = false;
-                    windowTitle = "SELECTION MENU";
-                    for(BUTTON* b : selecButtons) alignButton(b);
+                    if(quitbutt->isSelected || input == 'q'){
+                         
+                         inGame1 = inGame2 = inGame3 = false;
+                         inSelect = true;
+                         windowTitle = "SELECTION MENU";
+                         for(BUTTON* b : selecButtons) alignButton(b);
+                         
+                    }
+                    
                }
+               
+               inPause = false;
                curr_idx = 0;
                resumebutt->isSelected = true; // çıkarken bulduğumuz gibi bırakalım.
+               restartbutt->isSelected = false;
+               quitbutt->isSelected = false;
+               
+               inPause = false;
+               curr_idx = 0;
+               resumebutt->isSelected = true; // çıkarken bulduğumuz gibi bırakalım.
+               restartbutt->isSelected = false;
                quitbutt->isSelected = false;
                break;
+          case 'q':
+               goto quit;
           default:
                break;
      }
@@ -383,17 +401,18 @@ void Game::handlePause(int input){
 void Game::drawPause(){
      
      if(inGame1){
-          game1->print(mainwin);
+          game1->print();
      }else if (inGame2){
           game2->print(mainwin);
      }else if (inGame3){
           game3->print(mainwin);
      }
      wnoutrefresh(mainwin);
-     printLogo(pause_logo,4);
+     printLogo(pause_logo,2);
      wnoutrefresh(mainwin);
      
      resumebutt->drawButt();
+     restartbutt->drawButt();
      quitbutt->drawButt();
 }
 

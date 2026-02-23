@@ -99,6 +99,7 @@ class Game{
      void handlePause(int input);
      void drawPause();
           BUTTON* resumebutt = nullptr;
+          BUTTON* restartbutt = nullptr;
           BUTTON* quitbutt = nullptr;
           
      // void alignButton(BUTTON* butt, int h, int w);
