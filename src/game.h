@@ -25,7 +25,7 @@ struct BUTTON {
      
      std::string content;
      
-     BUTTON(WINDOW* parent, char* cont, int begin_y);
+     BUTTON(WINDOW* parent, const char* cont, int begin_y);
      void drawButt();
      
 };
@@ -35,7 +35,13 @@ class Game{
      friend class SpaceShooters;
      friend class DinoGame;
      friend class ComingSoon;
+    
+     //MENU NAMES:
+     const char* mainName = "MAIN MENU";
+     const char* selecName = "SELECTION MENU";
+     const char* pauseName = "PAUSE MENU";
      
+     //MENU LOGOS:
      std::vector<const char*> game_logo = {"$$\\         $$\\  $$$$$$\\   $$$$$$\\  $$\\      $$\\ $$$$$$$$\\ ",
                                            "$$ |        $  |$$  __$$\\ $$  __$$\\ $$$\\    $$$ |$$  _____|",
                                            "$$ | $$$$$$\\\\_/ $$ /  \\__|$$ /  $$ |$$$$\\  $$$$ |$$ |      ",
@@ -67,6 +73,7 @@ class Game{
      const char* windowTitle;
      
      bool exitWanted = false;
+     bool escDetected = false;
      
      bool inMain = true;
      bool inSelect = false;
@@ -114,7 +121,8 @@ class Game{
     
     
     SpaceShooters* game1;
-    DinoGame* game2;
+    // DinoGame* game2;
+    ComingSoon* game2;
     ComingSoon* game3;
     
     // void create_win(BLOCK* win); // create win and resize according stdscr

@@ -15,6 +15,7 @@ class ComingSoon {
      const char* message = "This game is not currently available wait for future updates!";
      
      public:
+          const char* getName();
           bool process(WINDOW* &win, int input);
           void print(WINDOW* &win);
           void reset();

@@ -26,3 +26,7 @@ void ComingSoon::print(WINDOW* &win){
 
 void ComingSoon::reset(){
 }
+
+const char* ComingSoon::getName(){
+     return "COMING SOON";
+}

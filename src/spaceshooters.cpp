@@ -20,7 +20,7 @@ SpaceShooters::SpaceShooters(WINDOW* &win_){
      }
 }
      
-     bool SpaceShooters::process(int input){
+     bool SpaceShooters::process(int input, bool escDetected){
           switch(input){
                case 27 : case 'q':
                     return true;
@@ -77,3 +77,6 @@ PlayerBullet::PlayerBullet(WINDOW* &win_,int y_, int x_):Entity(win_,y_,x_){
           wnoutrefresh(win);
      }
 
+const char* SpaceShooters::getName(){
+     return "SPACE SHOOTERS";
+}

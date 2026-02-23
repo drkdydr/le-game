@@ -79,9 +79,10 @@ class SpaceShooters{
      
      public:
           SpaceShooters(WINDOW* &win);
-          bool process(int input);
+          bool process(int input, bool escDetected);
           void print();
           void reset(); // will reset the game.
+          const char* getName();
 };
 
 #endif

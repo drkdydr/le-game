@@ -16,3 +16,7 @@ void DinoGame::print(WINDOW* &win){}
 
 void DinoGame::reset(){
 }
+
+const char* DinoGame::getName(){
+     return "DINO GAME";
+}
