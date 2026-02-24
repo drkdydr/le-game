@@ -1,6 +1,6 @@
 <img src="img/screenshot.png"></img>
 
-# **le'Game: a TUI Game Centre**
+# **le'Game: a TUI Game Center**
 
 ## What is le'Game
 
@@ -43,4 +43,4 @@ Enjoy:
 
 Now you can move the program wherever you want. (/usr/bin, /etc, /home/bin ...)
 
-### Please feel free to share your thoughst and suggestions.
+### Please feel free to share your thoughts and suggestions.
