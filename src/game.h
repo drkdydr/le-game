@@ -9,6 +9,8 @@
 #include "dinogame.h"
 #include "comingsoon.h"
 
+
+
 int findDigits(int num);
 
 void bold_box(WINDOW* w);
@@ -90,7 +92,6 @@ class Game{
      // 0 : for main-logo 1 : for select logo 
      // (if i want to add new logos i will switch id's data type to integer.)
      
-     const char* version = "v.0.5";
      
      const char* windowTitle;
      

@@ -162,7 +162,7 @@ Enemy::Enemy(WINDOW* &win_,int y_, int x_):Entity(win_,y_,x_){
 EnemyBullet* Enemy::shoot(){
      if (isDead) return nullptr;
      int random = rand();
-     if (random%75 == 0)
+     if (random%60 == 0)
           return new EnemyBullet(win, this->y+height, this->x+(width/2));
      return nullptr;
 }

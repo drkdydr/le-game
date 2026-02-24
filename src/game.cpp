@@ -68,8 +68,12 @@ void Game::initialize(){
      
      // nodelay(stdscr,true);
      nodelay(mainwin,true);
-     keypad(mainwin,true);
      
+     // Keypad:
+     // If enabled (bf is TRUE) then when an input character reading function reads ESC, it waits for further input corresponding to an escape sequence defined by the terminal type description.
+     // If disabled (bf is FALSE), curses does not treat function keys specially and the program has to interpret escape sequences itself.
+
+     keypad(mainwin,false);
 }
 
 void Game::start(){
@@ -85,14 +89,13 @@ void Game::start(){
           
           if (ch == KEY_RESIZE) alignWin();
           
-          if (ch == 27){
-               int ch2 = wgetch(mainwin);
-               if(ch2 != ERR){
-                    ungetch(ch2);
-                    ch = 'i';
-               }
-               // if ALT set key to unfunctional key
-          }
+          // if (ch == 27){ // ALT and ESC has same ascii code
+          //      int ch2 = wgetch(mainwin);
+          //      if(ch2 != ERR){
+          //           ungetch(ch2);
+          //           ch = 'i';
+          //      }
+          // }
           
           if (COLS < win_width || LINES < win_height){
                resizeNotif();
@@ -277,16 +280,16 @@ void Game::handleMain(int input){
 
 void Game::drawMain(){
      printLogo(game_logo,2);
-     printVer();
+     // printVer();
      wnoutrefresh(mainwin);
      exitbutt->drawButt();
      startbutt->drawButt();
 }
 
-void Game::printVer(){
-     const char* text = "VERSION ";
-     mvwprintw(mainwin,win_height-2,win_width - (strlen(text) + strlen(version) + 2),"%s%s",text,version);
-}
+// void Game::printVer(){
+//      const char* text = "VERSION ";
+//      mvwprintw(mainwin,win_height-2,win_width - (strlen(text) + strlen(version) + 2),"%s%s",text,version);
+// }
 
 void Game::printLogo(std::vector<const char*> &logo, int y_idx){
      
