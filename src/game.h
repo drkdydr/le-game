@@ -82,7 +82,7 @@ class Game{
      };
      
      std::vector<const char*> gameover_logo = {                                                    
-          " _____ _____ _____ _____    _____ _____ _____ _____",
+          " _____ _____ _____ _____    _____ _____ _____ _____ ",
           "|   __|  _  |     |   __|  |     |  |  |   __| __  |",
           "|  |  |     | | | |   __|  |  |  |  |  |   __|    -|",
           "|_____|__|__|_|_|_|_____|  |_____|\\___/|_____|__|__|"   
@@ -110,6 +110,7 @@ class Game{
      int lastLINES, lastCOLS; // window size değişmiş mi kontrol için
      
      int score;
+     int in;
     
      void resizeNotif();
      
@@ -167,7 +168,7 @@ class Game{
     // void handle_win(BLOCK); // handle already exist win size according stdscr
     
      void alignWin(); // bunun başına block constructor yaptığımda zaten iki fonksiyonu da elde edeceğim.
-     
+     void handleEscape();
      
      public:
      void initialize();

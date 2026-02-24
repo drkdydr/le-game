@@ -85,17 +85,12 @@ void Game::start(){
           if (exitWanted) break;
           
           // flushinp();
-          int ch = wgetch(mainwin);
+          in = wgetch(mainwin);
           
-          if (ch == KEY_RESIZE) alignWin();
+          if (in == KEY_RESIZE) alignWin();
           
-          // if (ch == 27){ // ALT and ESC has same ascii code
-          //      int ch2 = wgetch(mainwin);
-          //      if(ch2 != ERR){
-          //           ungetch(ch2);
-          //           ch = 'i';
-          //      }
-          // }
+          if (in == '\033') // ALT and ESC has same ascii code
+               handleEscape();
           
           if (COLS < win_width || LINES < win_height){
                resizeNotif();
@@ -107,18 +102,18 @@ void Game::start(){
           mvwprintw(mainwin,0,1," %s ", windowTitle);
           
           if (inMain){ 
-               handleMain(ch);
+               handleMain(in);
           } else if (inSelect){
-              handleSelec(ch);
+              handleSelec(in);
           } else if (inPause){
-              handlePause(ch); 
+              handlePause(in); 
           } else if (inVictory){
-               handleVictory(ch);
+               handleVictory(in);
           } else if (inGameOver){
-               handleGameOver(ch);
+               handleGameOver(in);
           } else if (inGame1){
                bool r1, r2;
-               score = game1->process(ch,r1,r2);
+               score = game1->process(in,r1,r2);
                
                if (r1==0 && r2==1){//pause
                     
@@ -141,12 +136,12 @@ void Game::start(){
                }
                
           } else if (inGame2){
-               inPause = game2->process(mainwin,ch);
+               inPause = game2->process(mainwin,in);
                if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
                     for(BUTTON* b : pauseButtons) alignButton(b);
                
           } else if (inGame3){
-               inPause = game3->process(mainwin,ch); 
+               inPause = game3->process(mainwin,in); 
                if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
                     for(BUTTON* b : pauseButtons) alignButton(b);
           }
@@ -156,6 +151,32 @@ void Game::start(){
      }
      
      endwin();
+}
+
+void Game::handleEscape(){
+     int in2 = wgetch(mainwin);
+     if (in2 == '['){
+          int in3 = wgetch(mainwin);
+          switch(in3){
+               case 'A': // ESC(27) + [(91) + A(65) -> UP ARROW
+                    in = 'w';
+               break;
+               case 'B': // ESC(27) + [(91) + B(66) -> DOWN ARROW
+                    in = 's'; 
+               break;
+               case 'C': // ESC(27) + [(91) + C(67) -> RIGHT ARROW
+                    in = 'd'; 
+               break;
+               case 'D': // ESC(27) + [(91) + D(68) -> LEFT ARROW
+                    in = 'a';
+               break;
+               default:
+               ungetch(in2);
+               ungetch(in3);
+               break;
+          }
+     }else
+          ungetch(in2);
 }
 
 void Game::alignWin(){

@@ -44,30 +44,10 @@ int SpaceShooters::process(int input, bool& r1, bool& r2){ //r1 r2 olayından ç
      // 0  1 : paused
      // 1  0 : gameover
      // 1  1 : victory
-
      
      flushinp(); // bunun oynayışını daha çok sevdim.
      usleep(150000);
      // flushinp();
-     
-     switch(input){
-          case 27 : case 'q':
-               r1 = 0;
-               r2 = 1;
-               return 0;
-               break;
-          case 'h' : case 'a' : case KEY_LEFT :
-               player->move(LEFT);
-               break;
-          case 'l' : case 'd' : case KEY_RIGHT :
-               player->move(RIGHT);
-               break;
-          case ' ' : case 'x': // shoot
-               playerBullets.push_back(player->shoot());
-               break;
-          default :
-               break;
-     }
      
      for(Enemy* e : enemies){
           EnemyBullet* eb = e->shoot();
@@ -104,6 +84,25 @@ int SpaceShooters::process(int input, bool& r1, bool& r2){ //r1 r2 olayından ç
      }else{ // nothing
           r1 = 0;
           r2 = 0;
+     }
+     
+     switch(input){
+          case 27 : case 'q':
+               r1 = 0;
+               r2 = 1;
+               return 0;
+               break;
+          case 'h' : case 'a' : case KEY_LEFT :
+               player->move(LEFT);
+               break;
+          case 'l' : case 'd' : case KEY_RIGHT :
+               player->move(RIGHT);
+               break;
+          case ' ' : case 'x': // shoot
+               playerBullets.push_back(player->shoot());
+               break;
+          default :
+               break;
      }
      
      print();
