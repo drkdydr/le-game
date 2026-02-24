@@ -11,10 +11,17 @@
 
 //todo :
 // warninglerden kurtul. (BUTTON'da char* variable'ın başına const yazdım oldu.)
-// space shooters class'ı oluştur ve oyunu orada yaz.
+
+//critical:
+
+// optional
+// isHidden bir işe yarıyor mu bak.
+// buttonları gerçekten buton yap (press fonksiyonu ekle ve yapacaklarını oraya yaz.)
+// gereksiz wnoutrefresh'leri kaldır.
 // main menu falan sadece ekran boyutu falan değiştiği zaman değişsin
 // butonlarda dalgalanma oluyor.
 // butonlar sadece switch sırasında tekrar yazılsın istiyorum.
+
 
 void Game::initialize(){
      
@@ -28,8 +35,6 @@ void Game::initialize(){
      windowTitle = "MAIN MENU";
      
      mainwin = newwin(0,0,0,0);
-     
-     // alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
      
      game1 = new SpaceShooters(mainwin);
      // game2 = new DinoGame();
@@ -52,6 +57,8 @@ void Game::initialize(){
      mainButtons = {startbutt, exitbutt};
      selecButtons = {game1butt, game2butt, game3butt};
      pauseButtons = {resumebutt, restartbutt, quitbutt};
+     victoryButtons = {restartbutt, quitbutt};
+     gameOverButtons = {restartbutt, quitbutt};
      
      alignWin(); // bunu yapmadan button oluşturunca sıkıntı oluyor.
      
@@ -67,11 +74,9 @@ void Game::initialize(){
 
 void Game::start(){
      
-     // inMain = true; // initialized in game.h already
+     inMain = true;
      
      while(true){
-          
-          escDetected = false;
           
           if (exitWanted) break;
           
@@ -85,9 +90,6 @@ void Game::start(){
                if(ch2 != ERR){
                     ungetch(ch2);
                     ch = 'i';
-               }else{
-                    // ungetch(ch2);
-                    escDetected = true;
                }
                // if ALT set key to unfunctional key
           }
@@ -107,12 +109,43 @@ void Game::start(){
               handleSelec(ch);
           } else if (inPause){
               handlePause(ch); 
+          } else if (inVictory){
+               handleVictory(ch);
+          } else if (inGameOver){
+               handleGameOver(ch);
           } else if (inGame1){
-               inPause = game1->process(ch);
+               bool r1, r2;
+               score = game1->process(ch,r1,r2);
+               
+               if (r1==0 && r2==1){//pause
+                    
+                    resumebutt ->isSelected = true;
+                    restartbutt->isSelected = false;
+                    quitbutt ->isSelected = false;
+                    
+                    inPause = true;
+                    for(BUTTON* b : pauseButtons) alignButton(b);
+               }else if (r1!=0 || r2!=0 ) { //not nothing
+                    restartbutt->isSelected = true;
+                    quitbutt ->isSelected = false;
+                    if (r1==1 && r2==0){//gameover
+                         inGameOver = true;
+                         for(BUTTON* b : gameOverButtons) alignButton(b);
+                    }else if (r1==1 && r2==1){//victory
+                         inVictory = true;
+                         for(BUTTON* b : victoryButtons) alignButton(b);
+                    }
+               }
+               
           } else if (inGame2){
                inPause = game2->process(mainwin,ch);
+               if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
+                    for(BUTTON* b : pauseButtons) alignButton(b);
+               
           } else if (inGame3){
                inPause = game3->process(mainwin,ch); 
+               if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
+                    for(BUTTON* b : pauseButtons) alignButton(b);
           }
          
           doupdate();
@@ -139,6 +172,10 @@ void Game::alignWin(){
           for(BUTTON* b : selecButtons) alignButton(b);
      else if (inPause)
           for(BUTTON* b : pauseButtons) alignButton(b);
+     else if (inVictory)
+          for(BUTTON* b : victoryButtons) alignButton(b);
+     else if (inGameOver)
+          for(BUTTON* b : gameOverButtons) alignButton(b);
      
      touchwin(mainwin);
      wnoutrefresh(mainwin);
@@ -148,7 +185,8 @@ void Game::alignWin(){
 void Game::hideButton(BUTTON* b){
      if (b == nullptr) return;
      
-     if (b->win != nullptr){ //subwinleri move yapmak seg faultlara veya bende olduğu gibi stdscr'de 0,0'a gitmelerine sebep olabiliyormuş.
+     if (b->win != nullptr){ 
+          //subwinleri move yapmak seg faultlara veya bende olduğu gibi stdscr'de 0,0'a gitmelerine sebep olabiliyormuş.
           delwin(b->win);
           b->win = nullptr;
      }
@@ -239,9 +277,15 @@ void Game::handleMain(int input){
 
 void Game::drawMain(){
      printLogo(game_logo,2);
+     printVer();
      wnoutrefresh(mainwin);
      exitbutt->drawButt();
      startbutt->drawButt();
+}
+
+void Game::printVer(){
+     const char* text = "VERSION ";
+     mvwprintw(mainwin,win_height-2,win_width - (strlen(text) + strlen(version) + 2),"%s%s",text,version);
 }
 
 void Game::printLogo(std::vector<const char*> &logo, int y_idx){
@@ -330,8 +374,6 @@ void Game::drawSelec(){
 void Game::handlePause(int input){
      
      windowTitle = pauseName; //process functionlarını bunu kaçınılmaz kılacak şekilde yazmışız da o yüzden
-     for(BUTTON* b : pauseButtons)
-          alignButton(b);
      
      const static int button_count = 3;
      static int curr_idx = 0;
@@ -438,8 +480,214 @@ void Game::drawPause(){
      quitbutt->drawButt();
 }
 
+void Game::drawScore(){
+     const char* text = "SCORE:";
+     mvwprintw(mainwin, 8, (win_width - strlen(text))/2, "%s", text);
+     mvwprintw(mainwin, 9, (win_width - findDigits(score))/2, "%d", score);
+     
+}
+
+void Game::handleVictory(int input){
+     windowTitle = victoryName; //process functionlarını bunu kaçınılmaz kılacak şekilde yazmışız da o yüzden
+     
+     const static int button_count = 2;
+     static int curr_idx = 0;
+     
+     switch(input){
+          case KEY_DOWN : case 's' : case 'j':
+               victoryButtons[curr_idx]->isSelected = false;
+               curr_idx = (curr_idx + 1) % button_count;
+               victoryButtons[curr_idx]->isSelected = true;
+               break;
+          case KEY_UP : case 'w' : case 'k' :
+               victoryButtons[curr_idx]->isSelected = false;
+               curr_idx = (curr_idx + button_count - 1) % button_count;
+               victoryButtons[curr_idx]->isSelected = true;
+               break;
+          case KEY_ENTER : case '\n' : case ' ':
+               
+               if (inGame1)
+                    game1->reset();
+               if (inGame2)
+                    game2->reset();
+               if (inGame3)
+                    game3->reset();
+               
+               if (quitbutt->isSelected) {
+                    
+                    inGame1 = inGame2 = inGame3 = false; 
+                    inSelect = true;
+                    windowTitle = selecName;
+                    
+                    for(BUTTON* b : victoryButtons) hideButton(b);
+                    for(BUTTON* b : selecButtons) alignButton(b);
+                    
+               }else{
+                    
+                    if (inGame1)
+                         windowTitle = game1->getName();
+                    
+                    if (inGame2)
+                         windowTitle = game2->getName();
+                    
+                    if (inGame3)
+                         windowTitle = game3->getName();
+                    
+               }
+               
+               inVictory = false;
+               curr_idx = 0;
+               restartbutt->isSelected = true;
+               quitbutt->isSelected = false;
+               break;
+         
+          case 'q': case 27:
+          
+               if (inGame1)
+                    game1->reset();
+               if (inGame2)
+                    game2->reset();
+               if (inGame3)
+                    game3->reset();
+               
+               inGame1 = inGame2 = inGame3 = false; 
+               inSelect = true;
+               windowTitle = selecName;
+               
+               for(BUTTON* b : victoryButtons) hideButton(b);
+               for(BUTTON* b : selecButtons) alignButton(b);
+               
+               inVictory = false;
+               curr_idx = 0;
+               restartbutt->isSelected = true;
+               quitbutt->isSelected = false;
+               break;
+               
+          default:
+               break;
+     }
+     drawVictory();
+}
+
+void Game::drawVictory(){
+     if(inGame1){
+          game1->print();
+     }else if (inGame2){
+          game2->print(mainwin);
+     }else if (inGame3){
+          game3->print(mainwin);
+     }
+     wnoutrefresh(mainwin);
+     printLogo(victory_logo,3);
+     drawScore();
+     wnoutrefresh(mainwin);
+     
+     restartbutt->drawButt();
+     quitbutt->drawButt();
+}
+
+void Game::handleGameOver(int input){
+     windowTitle = gameoverName; //process functionlarını bunu kaçınılmaz kılacak şekilde yazmışız da o yüzden
+     
+     const static int button_count = 2;
+     static int curr_idx = 0;
+     
+     switch(input){
+          case KEY_DOWN : case 's' : case 'j':
+               gameOverButtons[curr_idx]->isSelected = false;
+               curr_idx = (curr_idx + 1) % button_count;
+               gameOverButtons[curr_idx]->isSelected = true;
+               break;
+          case KEY_UP : case 'w' : case 'k' :
+               gameOverButtons[curr_idx]->isSelected = false;
+               curr_idx = (curr_idx + button_count - 1) % button_count;
+               gameOverButtons[curr_idx]->isSelected = true;
+               break;
+          case KEY_ENTER : case '\n' : case ' ':
+               
+               if (inGame1)
+                    game1->reset();
+               if (inGame2)
+                    game2->reset();
+               if (inGame3)
+                    game3->reset();
+          
+               if (quitbutt->isSelected) {
+                    
+                    inGame1 = inGame2 = inGame3 = false; 
+                    inSelect = true;
+                    windowTitle = selecName;
+                    
+                    for(BUTTON* b : victoryButtons) hideButton(b);
+                    for(BUTTON* b : selecButtons) alignButton(b);
+                    
+               }else{
+                    
+                    if (inGame1)
+                         windowTitle = game1->getName();
+                    
+                    if (inGame2)
+                         windowTitle = game2->getName();
+                    
+                    if (inGame3)
+                         windowTitle = game3->getName();
+                    
+               }
+               inGameOver = false;
+               curr_idx = 0;
+               restartbutt->isSelected = true;
+               quitbutt->isSelected = false;
+               break;
+         
+          case 'q': case 27:
+          
+               if (inGame1)
+                    game1->reset();
+               if (inGame2)
+                    game2->reset();
+               if (inGame3)
+                    game3->reset();
+          
+               inGame1 = inGame2 = inGame3 = false; 
+               inSelect = true;
+               windowTitle = selecName;
+               
+               for(BUTTON* b : gameOverButtons) hideButton(b);
+               for(BUTTON* b : selecButtons) alignButton(b);
+               
+               inGameOver = false;
+               curr_idx = 0;
+               restartbutt->isSelected = true;
+               quitbutt->isSelected = false;
+               break;
+               
+          default:
+               break;
+     }
+     drawGameOver();
+     
+}
+
+void Game::drawGameOver(){
+     if(inGame1){
+          game1->print();
+     }else if (inGame2){
+          game2->print(mainwin);
+     }else if (inGame3){
+          game3->print(mainwin);
+     }
+     wnoutrefresh(mainwin);
+     printLogo(gameover_logo,3);
+     drawScore();
+     wnoutrefresh(mainwin);
+     
+     restartbutt->drawButt();
+     quitbutt->drawButt();
+}
+
+
 int findDigits(int num){
-     if (num < 0) return findDigits(-num);
+     if (num < 0) return 1 + findDigits(-num); // eksi de bir basamak (matematiksel olmasa da burada böyle)
      if (num == 0) return 0;
      return 1 + findDigits(num/10);
 }

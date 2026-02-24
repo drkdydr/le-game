@@ -41,36 +41,56 @@ class Game{
      //MENU NAMES:
      const char* mainName = "MAIN MENU";
      const char* selecName = "SELECTION MENU";
-     const char* pauseName = "PAUSE MENU";
+     const char* pauseName = "PAUSED";
+     const char* victoryName = "VICTORY";
+     const char* gameoverName = "GAME OVER";
      
      //MENU LOGOS:
-     std::vector<const char*> game_logo = {"$$\\         $$\\  $$$$$$\\   $$$$$$\\  $$\\      $$\\ $$$$$$$$\\ ",
-                                           "$$ |        $  |$$  __$$\\ $$  __$$\\ $$$\\    $$$ |$$  _____|",
-                                           "$$ | $$$$$$\\\\_/ $$ /  \\__|$$ /  $$ |$$$$\\  $$$$ |$$ |      ",
-                                           "$$ |$$  __$$\\   $$ |$$$$\\ $$$$$$$$ |$$\\$$\\$$ $$ |$$$$$\\    ",
-                                           "$$ |$$$$$$$$ |  $$ |\\_$$ |$$  __$$ |$$ \\$$$  $$ |$$  __|   ",
-                                           "$$ |$$   ____|  $$ |  $$ |$$ |  $$ |$$ |\\$  /$$ |$$ |      ",
-                                           "$$ |\\$$$$$$$\\   \\$$$$$$  |$$ |  $$ |$$ | \\_/ $$ |$$$$$$$$\\ ",
-                                           "\\__| \\_______|   \\______/ \\__|  \\__|\\__|     \\__|\\________|"
+     std::vector<const char*> game_logo = {
+          "$$\\         $$\\  $$$$$$\\   $$$$$$\\  $$\\      $$\\ $$$$$$$$\\ ",
+          "$$ |        $  |$$  __$$\\ $$  __$$\\ $$$\\    $$$ |$$  _____|",
+          "$$ | $$$$$$\\\\_/ $$ /  \\__|$$ /  $$ |$$$$\\  $$$$ |$$ |      ",
+          "$$ |$$  __$$\\   $$ |$$$$\\ $$$$$$$$ |$$\\$$\\$$ $$ |$$$$$\\    ",
+          "$$ |$$$$$$$$ |  $$ |\\_$$ |$$  __$$ |$$ \\$$$  $$ |$$  __|   ",
+          "$$ |$$   ____|  $$ |  $$ |$$ |  $$ |$$ |\\$  /$$ |$$ |      ",
+          "$$ |\\$$$$$$$\\   \\$$$$$$  |$$ |  $$ |$$ | \\_/ $$ |$$$$$$$$\\ ",
+          "\\__| \\_______|   \\______/ \\__|  \\__|\\__|     \\__|\\________|"
      };
      
      
-     std::vector<const char*> select_logo =   {" _____ _____ __    _____ _____ _____ _ ",
-                                               "|   __|   __|  |  |   __|     |_   _|_|",
-                                               "|__   |   __|  |__|   __|   --| | |  _ ",
-                                               "|_____|_____|_____|_____|_____| |_| |_|"
+     std::vector<const char*> select_logo =   {
+          " _____ _____ __    _____ _____ _____ _ ",
+          "|   __|   __|  |  |   __|     |_   _|_|",
+          "|__   |   __|  |__|   __|   --| | |  _ ",
+          "|_____|_____|_____|_____|_____| |_| |_|"
      };
      
      std::vector<const char*> pause_logo = {                                     
-                                             " _____ _____ _____ _____ _____ ____  ",
-                                             "|  _  |  _  |  |  |   __|   __|    \\ ",
-                                             "|   __|     |  |  |__   |   __|  |  |",
-                                             "|__|  |__|__|_____|_____|_____|____/ "
+          " _____ _____ _____ _____ _____ ____  ",
+          "|  _  |  _  |  |  |   __|   __|    \\ ",
+          "|   __|     |  |  |__   |   __|  |  |",
+          "|__|  |__|__|_____|_____|_____|____/ "
+     };
+     
+     std::vector<const char*> victory_logo = {
+          " _____ _____ _____ _____ _____ _____ __ __ ", 
+          "|  |  |     |     |_   _|     | __  |  |  |",
+          "|  |  |-   -|   --| | | |  |  |    -|_   _|",
+          " \\___/|_____|_____| |_| |_____|__|__| |_|  "
+     };
+     
+     std::vector<const char*> gameover_logo = {                                                    
+          " _____ _____ _____ _____    _____ _____ _____ _____",
+          "|   __|  _  |     |   __|  |     |  |  |   __| __  |",
+          "|  |  |     | | | |   __|  |  |  |  |  |   __|    -|",
+          "|_____|__|__|_|_|_|_____|  |_____|\\___/|_____|__|__|"   
      };
      
      void printLogo(std::vector<const char*> &logo, int y_idx);
      // 0 : for main-logo 1 : for select logo 
      // (if i want to add new logos i will switch id's data type to integer.)
+     
+     const char* version = "v.0.5";
      
      const char* windowTitle;
      
@@ -83,8 +103,12 @@ class Game{
      bool inGame1 = false;
      bool inGame2 = false;
      bool inGame3 = false;
+     bool inVictory = false;
+     bool inGameOver = false;
      
      int lastLINES, lastCOLS; // window size değişmiş mi kontrol için
+     
+     int score;
     
      void resizeNotif();
      
@@ -94,6 +118,7 @@ class Game{
      
      void handleMain(int input);
      void drawMain();
+          void printVer();
      WINDOW* mainwin = nullptr;
           BUTTON* startbutt = nullptr;
           BUTTON* exitbutt = nullptr;
@@ -110,8 +135,17 @@ class Game{
           BUTTON* restartbutt = nullptr;
           BUTTON* quitbutt = nullptr;
           
+     void drawScore();
+          
+     void handleVictory(int input);
+     void drawVictory();
+          // BUTTON* quitbutt = nullptr; //zaten olanları kullanıcaz.
+          // BUTTON* restartbutton = nullptr;
+          
+     void handleGameOver(int input);
+     void drawGameOver();
+          
      // void alignButton(BUTTON* butt, int h, int w);
-     bool isButtonsHidden;
      void hideButton(BUTTON* b);
      void alignButton(BUTTON* b);
     
@@ -119,6 +153,8 @@ class Game{
     std::vector<BUTTON*> mainButtons;
     std::vector<BUTTON*> selecButtons;
     std::vector<BUTTON*> pauseButtons;
+    std::vector<BUTTON*> victoryButtons;
+    std::vector<BUTTON*> gameOverButtons;
     
     
     SpaceShooters* game1;

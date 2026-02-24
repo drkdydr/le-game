@@ -1,4 +1,3 @@
-// #include "comingsoon.h"
 #include <cstring>
 #include <ncurses.h>
 #include "comingsoon.h"

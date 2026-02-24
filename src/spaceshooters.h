@@ -87,6 +87,12 @@ class Player : public Entity {
 class SpaceShooters{
      
      int lives = 3;
+     int score = 0;
+     
+     int enemyremains = 26;
+     int killscore = 200;
+     int livescore = 500;
+     
      int tick;
      
      // bool didWin = false;
@@ -100,6 +106,7 @@ class SpaceShooters{
      std::vector<PlayerBullet*> playerBullets;
      
      void printLives();
+     void printScore();
      void printEnemies();
      void printEnemyBullets();
      void printPlayerBullets();
@@ -112,7 +119,7 @@ class SpaceShooters{
      public:
           SpaceShooters(WINDOW* &win);
           ~SpaceShooters();
-          bool process(int input);
+          int process(int input, bool& r0, bool& r1); //bit based coding function result
           void print();
           void reset(); // will reset the game.
           const char* getName();
