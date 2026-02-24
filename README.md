@@ -34,7 +34,9 @@ Compile the program:
     mkdir -p ../bin
     g++ *.h *.cpp -o ../bin/le-game -lncursesw && .
 
-(I do not have makefile yet but I will add later)
+(There is not any makefile yet but I will add it later.)
+
+(Also i will add an installation script)
 
 Enjoy:
 
