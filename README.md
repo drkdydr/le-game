@@ -1,6 +1,6 @@
 <img src="img/screenshot.png"></img>
 
-# **le'Game: a TUI Game Centre**
+# **le'Game: a TUI Game Center**
 
 ## What is le'Game
 
@@ -34,7 +34,9 @@ Compile the program:
     mkdir -p ../bin
     g++ *.h *.cpp -o ../bin/le-game -lncursesw && .
 
-(I do not have makefile yet but I will add later)
+(There is not any makefile yet but I will add it later.)
+
+(Also i will add an installation script)
 
 Enjoy:
 
@@ -43,4 +45,4 @@ Enjoy:
 
 Now you can move the program wherever you want. (/usr/bin, /etc, /home/bin ...)
 
-### Please feel free to share your thoughst and suggestions.
+### Please feel free to share your thoughts and suggestions.
