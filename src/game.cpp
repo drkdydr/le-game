@@ -13,6 +13,7 @@
 // warninglerden kurtul. (BUTTON'da char* variable'ın başına const yazdım oldu.)
 
 //critical:
+//comingsoon'da esc yapınca pause ekranında resume ve restartbutt'lar aynı anda yanıyor. düzelince hep düzeliyor.
 
 // optional
 // isHidden bir işe yarıyor mu bak.
@@ -101,53 +102,62 @@ void Game::start(){
           box(mainwin,0,0);
           mvwprintw(mainwin,0,1," %s ", windowTitle);
           
-          if (inMain){ 
+          // pause menuyu daha abstract yapacam
+
+          if (inMain)
                handleMain(in);
-          } else if (inSelect){
+
+          if (inSelect)
               handleSelec(in);
-          } else if (inPause){
+
+          if (inPause)
               handlePause(in); 
-          } else if (inVictory){
+
+          if (inVictory)
                handleVictory(in);
-          } else if (inGameOver){
+
+          if (inGameOver)
                handleGameOver(in);
-          } else if (inGame1){
-               bool r1, r2;
-               score = game1->process(in,r1,r2);
-               
-               if (r1==0 && r2==1){//pause
-                    
-                    resumebutt ->isSelected = true;
-                    restartbutt->isSelected = false;
-                    quitbutt ->isSelected = false;
-                    
-                    inPause = true;
-                    for(BUTTON* b : pauseButtons) alignButton(b);
-               }else if (r1!=0 || r2!=0 ) { //not nothing
-                    restartbutt->isSelected = true;
-                    quitbutt ->isSelected = false;
-                    if (r1==1 && r2==0){//gameover
-                         inGameOver = true;
-                         for(BUTTON* b : gameOverButtons) alignButton(b);
-                    }else if (r1==1 && r2==1){//victory
-                         inVictory = true;
-                         for(BUTTON* b : victoryButtons) alignButton(b);
-                    }
-               }
-               
-          } else if (inGame2){
-               inPause = game2->process(mainwin,in);
-               if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
-                    for(BUTTON* b : pauseButtons) alignButton(b);
-               
-          } else if (inGame3){
-               inPause = game3->process(mainwin,in); 
-               if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
-                    for(BUTTON* b : pauseButtons) alignButton(b);
+          
+          if (inGames){
+              if (inGame1){
+                   bool r1, r2;
+                   score = game1->process(in,r1,r2);
+                   
+                   if (r1==0 && r2==1){//pause
+
+                        resumebutt->isSelected = true;
+                        restartbutt->isSelected = false;
+                        quitbutt ->isSelected = false;
+                        
+                        inPause = true;
+                        for(BUTTON* b : pauseButtons) alignButton(b);
+                   }else if (r1!=0 || r2!=0 ) { // not nothing
+                        restartbutt->isSelected = true;
+                        quitbutt ->isSelected = false;
+                        if (r1==1 && r2==0){//gameover
+                             inGameOver = true;
+                             for(BUTTON* b : gameOverButtons) alignButton(b);
+                        }else if (r1==1 && r2==1){//victory
+                             inVictory = true;
+                             for(BUTTON* b : victoryButtons) alignButton(b);
+                        }
+                   }
+                   
+              } else if (inGame2){
+                   inPause = game2->process(mainwin,in);
+                   if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
+                        for(BUTTON* b : pauseButtons) alignButton(b);
+                   
+              } else if (inGame3){
+                   inPause = game3->process(mainwin,in); 
+                   if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
+                        for(BUTTON* b : pauseButtons) alignButton(b);
+              }
           }
          
           doupdate();
-          usleep(20000);
+          usleep(20000); // sleep for x microseconds (10^-6)
      }
      
      endwin();
@@ -343,6 +353,7 @@ void Game::handleSelec(int input){
           // KEY_ENTER numpad'deki enter tuşunu
           // \n ise klavyedeki enter'ı temsil ediyormuş.
                for(BUTTON* b : selecButtons) hideButton(b);
+               inGames = true;
                
                BUTTON* selected;
                

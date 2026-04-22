@@ -6,6 +6,7 @@
 
 class Entity;
 class Enemy;
+class SuperEnemy;
 class EnemyBullet;
 class Player;
 class PlayerBullet;
@@ -25,10 +26,10 @@ class Entity {
 
 class EnemyBullet : public Entity {
      friend class Player;
-     const int speed = 1; //1
+     int speed; //1
      char look = '*';
      public:
-     EnemyBullet(WINDOW* &win, int y, int x);
+     EnemyBullet(WINDOW* &win, int y, int x, int speedmult);
      bool move();
      void draw() const;
 };
@@ -42,6 +43,7 @@ class Enemy : public Entity {
           "|\\-/|"
      };
      public:
+     // Enemy();
      Enemy(WINDOW* &win, int y, int x);
      EnemyBullet* shoot();
      void reset();
@@ -49,6 +51,14 @@ class Enemy : public Entity {
      bool doesHit(PlayerBullet* pb) const;
      void draw() const;
 };
+
+// class SuperEnemy : public Enemy { // default enemy constructor gerekiyor diyor.
+//     bool isDead = false;
+//     public:
+//     SuperEnemy(WINDOW* &win, int y, int x){
+//         Enemy(win, y, x);
+//     }
+// };
 
 class PlayerBullet : public Entity {
      friend class Enemy;

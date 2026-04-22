@@ -11,7 +11,7 @@
 
 
 
-int findDigits(int num);
+int findDigits(int num); // helper function to find the number of digits for a number
 
 void bold_box(WINDOW* w);
 
@@ -101,6 +101,7 @@ class Game{
      bool inMain = true;
      bool inSelect = false;
      bool inPause = false;
+     bool inGames = false;
      bool inGame1 = false;
      bool inGame2 = false;
      bool inGame3 = false;
