@@ -161,7 +161,7 @@ Enemy::Enemy(WINDOW* &win_,int y_, int x_):Entity(win_,y_,x_){
 EnemyBullet* Enemy::shoot(){
      if (isDead) return nullptr;
      int random = rand();
-     if (random%60 == 0){
+     if (random % (60 - 2*(26 - SpaceShooters::enemyremains)) == 0){
         random = rand();
         if (random%10 == 0)
           return new EnemyBullet(win, this->y+height, this->x+(width/2), 3);

@@ -26,7 +26,7 @@ class Entity {
 
 class EnemyBullet : public Entity {
      friend class Player;
-     int speed = 10; //tick count for bullet to move 1 unit
+     int speed = 7; //tick count for bullet to move 1 unit
      char look = '*';
      public:
      EnemyBullet(WINDOW* &win, int y, int x, int speedmult);
@@ -101,7 +101,7 @@ class SpaceShooters{
      int lives = 3;
      int score = 0;
      
-     int enemyremains = 26;
+     inline static int enemyremains = 26;
      int killscore = 200;
      int livescore = 500;
      
@@ -137,6 +137,7 @@ class SpaceShooters{
           const char* getName();
           int getScore() const;
 
+    friend class Enemy; //aklıma daha iyi bir yol gelmedi (bu file 104, cpp 164)
 };
 
 #endif
