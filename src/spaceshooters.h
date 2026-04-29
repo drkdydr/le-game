@@ -26,12 +26,13 @@ class Entity {
 
 class EnemyBullet : public Entity {
      friend class Player;
-     int speed; //1
+     int speed = 10; //tick count for bullet to move 1 unit
      char look = '*';
      public:
      EnemyBullet(WINDOW* &win, int y, int x, int speedmult);
      bool move();
      void draw() const;
+     int getSpeed();
 };
 
 class Enemy : public Entity {
@@ -62,12 +63,13 @@ class Enemy : public Entity {
 
 class PlayerBullet : public Entity {
      friend class Enemy;
-     const int speed = 2; //2
+     const int speed = 5; //2
      char look = '^';
      public:
      PlayerBullet(WINDOW* &win, int y, int x);
      bool move();
      void draw() const;
+     int getSpeed();
 };
 
 class Player : public Entity {
@@ -129,10 +131,11 @@ class SpaceShooters{
      public:
           SpaceShooters(WINDOW* &win);
           ~SpaceShooters();
-          int process(int input, bool& r0, bool& r1); //bit based coding function result
+          void process(int input); //bit based coding function result
           void print();
           void reset(); // will reset the game.
           const char* getName();
+          int getScore() const;
 
 };
 

@@ -98,15 +98,15 @@ class Game{
      bool exitWanted = false;
      bool escDetected = false;
      
-     bool inMain = true;
-     bool inSelect = false;
-     bool inPause = false;
-     bool inGames = false;
-     bool inGame1 = false;
-     bool inGame2 = false;
-     bool inGame3 = false;
-     bool inVictory = false;
-     bool inGameOver = false;
+     static bool inMain;
+     static bool inSelect;
+     static bool inPause;
+     static bool inGames;
+     static bool inGame1;
+     static bool inGame2;
+     static bool inGame3;
+     static bool inVictory;
+     static bool inGameOver;
      
      int lastLINES, lastCOLS; // window size değişmiş mi kontrol için
      
@@ -174,6 +174,11 @@ class Game{
      public:
      void initialize();
      void start();
+
+    // friend class SpaceShooters, DinoGame, ComingSoon; // bu şekilde c++26 ile gelmiş
+    friend class SpaceShooters;
+    friend class DinoGame;
+    friend class ComingSoon;
 };
 
 

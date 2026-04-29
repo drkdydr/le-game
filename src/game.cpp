@@ -23,6 +23,15 @@
 // butonlarda dalgalanma oluyor.
 // butonlar sadece switch sırasında tekrar yazılsın istiyorum.
 
+bool Game::inMain = true; //sınıf içindeki static data member'lar cpp dosyasında "dışarıda" tanımlanır.
+bool Game::inSelect = false;
+bool Game::inPause = false;
+bool Game::inGames = false;
+bool Game::inGame1 = false;
+bool Game::inGame2 = false;
+bool Game::inGame3 = false;
+bool Game::inVictory = false;
+bool Game::inGameOver = false;
 
 void Game::initialize(){
      
@@ -87,6 +96,9 @@ void Game::start(){
           
           // flushinp();
           in = wgetch(mainwin);
+
+          // if (in == ERR && !inGames) continue; // waits until input comes (if not in games)
+          //this does not work but I will find a way to refresh window only when necessary
           
           if (in == KEY_RESIZE) alignWin();
           
@@ -104,56 +116,33 @@ void Game::start(){
           
           // pause menuyu daha abstract yapacam
 
-          if (inMain)
+          if (inMain){
                handleMain(in);
 
-          if (inSelect)
+          }else if (inSelect) {
               handleSelec(in);
 
-          if (inPause)
+          }else if (inPause) {
               handlePause(in); 
 
-          if (inVictory)
+          }else if (inVictory){
                handleVictory(in);
 
-          if (inGameOver)
+          }else if (inGameOver){
                handleGameOver(in);
-          
-          if (inGames){
-              if (inGame1){
-                   bool r1, r2;
-                   score = game1->process(in,r1,r2);
-                   
-                   if (r1==0 && r2==1){//pause
 
-                        resumebutt->isSelected = true;
-                        restartbutt->isSelected = false;
-                        quitbutt ->isSelected = false;
-                        
-                        inPause = true;
-                        for(BUTTON* b : pauseButtons) alignButton(b);
-                   }else if (r1!=0 || r2!=0 ) { // not nothing
-                        restartbutt->isSelected = true;
-                        quitbutt ->isSelected = false;
-                        if (r1==1 && r2==0){//gameover
-                             inGameOver = true;
-                             for(BUTTON* b : gameOverButtons) alignButton(b);
-                        }else if (r1==1 && r2==1){//victory
-                             inVictory = true;
-                             for(BUTTON* b : victoryButtons) alignButton(b);
-                        }
-                   }
-                   
-              } else if (inGame2){
-                   inPause = game2->process(mainwin,in);
-                   if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
-                        for(BUTTON* b : pauseButtons) alignButton(b);
-                   
-              } else if (inGame3){
-                   inPause = game3->process(mainwin,in); 
-                   if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
-                        for(BUTTON* b : pauseButtons) alignButton(b);
-              }
+          }else if (inGame1){
+              game1->process(in);
+
+          } else if (inGame2){
+               inPause = game2->process(mainwin,in);
+               if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
+                    for(BUTTON* b : pauseButtons) alignButton(b);
+               
+          } else if (inGame3){
+               inPause = game3->process(mainwin,in); 
+               if (inPause) // bunları da yazana kadar bir önlem (hepsi game1'in process'i gibi olacak.) 
+                    for(BUTTON* b : pauseButtons) alignButton(b);
           }
          
           doupdate();
@@ -242,7 +231,7 @@ void Game::alignButton(BUTTON* b){
      
      int main_w = getmaxx(mainwin);
      
-     b->win = derwin(mainwin, b->default_height, b->default_width,b->rel_y, (main_w - b->default_width)/2 );
+     b->win = derwin(mainwin, b->default_height, b->default_width,b->rel_y, (main_w - b->default_width)/2 ); // derwin is subwin but relative to parent win
      
      if (b->win != nullptr){ // if derwin throw ERR
           nodelay(b->win, true);
@@ -408,10 +397,19 @@ void Game::drawSelec(){
 
 void Game::handlePause(int input){
      
-     windowTitle = pauseName; //process functionlarını bunu kaçınılmaz kılacak şekilde yazmışız da o yüzden
-     
      const static int button_count = 3;
      static int curr_idx = 0;
+
+     if (!resumebutt->win || !restartbutt->win || !quitbutt->win){ // switching pause new
+        windowTitle = pauseName;
+        resumebutt->isSelected = true;
+        restartbutt->isSelected = false;
+        quitbutt ->isSelected = false;
+
+        curr_idx = 0;
+
+        for (BUTTON* b : pauseButtons) alignButton(b);
+     }
      
      switch(input){
           case KEY_DOWN : case 's' : case 'j':
@@ -453,6 +451,7 @@ void Game::handlePause(int input){
                          game3->reset();
                     
                    inGame1 = inGame2 = inGame3 = false; 
+                   inGames = false;
                    inSelect = true;
                    windowTitle = selecName;
                    
@@ -518,15 +517,24 @@ void Game::drawPause(){
 void Game::drawScore(){
      const char* text = "SCORE:";
      mvwprintw(mainwin, 8, (win_width - strlen(text))/2, "%s", text);
-     mvwprintw(mainwin, 9, (win_width - findDigits(score))/2, "%d", score);
+     mvwprintw(mainwin, 9, (win_width - findDigits(game1->getScore()))/2, "%d", game1->getScore());
      
 }
 
 void Game::handleVictory(int input){
-     windowTitle = victoryName; //process functionlarını bunu kaçınılmaz kılacak şekilde yazmışız da o yüzden
      
      const static int button_count = 2;
      static int curr_idx = 0;
+
+     if (!restartbutt->win || !quitbutt->win){   
+         windowTitle = victoryName; //process functionlarını bunu kaçınılmaz kılacak şekilde yazmışız da o yüzden
+         restartbutt->isSelected = true;
+         quitbutt ->isSelected = false;
+
+         curr_idx = 0;
+
+         for (BUTTON* b : victoryButtons) alignButton(b);
+     }
      
      switch(input){
           case KEY_DOWN : case 's' : case 'j':
@@ -605,6 +613,7 @@ void Game::handleVictory(int input){
 }
 
 void Game::drawVictory(){
+
      if(inGame1){
           game1->print();
      }else if (inGame2){
@@ -612,6 +621,7 @@ void Game::drawVictory(){
      }else if (inGame3){
           game3->print(mainwin);
      }
+
      wnoutrefresh(mainwin);
      printLogo(victory_logo,3);
      drawScore();
@@ -626,6 +636,16 @@ void Game::handleGameOver(int input){
      
      const static int button_count = 2;
      static int curr_idx = 0;
+
+     if (!restartbutt->win || !quitbutt->win){   
+         windowTitle = gameoverName;
+         restartbutt->isSelected = true;
+         quitbutt ->isSelected = false;
+
+         curr_idx = 0;
+
+         for (BUTTON* b : gameOverButtons) alignButton(b);
+     }
      
      switch(input){
           case KEY_DOWN : case 's' : case 'j':

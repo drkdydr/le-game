@@ -7,6 +7,7 @@
 
 // todo:
 
+// shoot chance of enemies should increase when enemy count decreases.
 // immortal mode [optional]
 // die animation (enemy/player) [optional]
 
@@ -33,30 +34,28 @@ SpaceShooters::SpaceShooters(WINDOW* &win_){
      
 }
 
-int SpaceShooters::process(int input, bool& r1, bool& r2){ //r1 r2 olayından çok memnun değilim ama iyi de duruyorlar.
+void SpaceShooters::process(int input){ //r1 r2 olayından çok memnun değilim ama iyi de duruyorlar.
      
-     // tick++;
+     if (tick >= 100) tick = 0; //prevent overflow
+     tick++;
      // if (tick % 50 != 0) return false; //tick rate for game (will be set more precisely)
      //tick'i buraya eklemek mallık 50 tane çalışmadan birinde çalışıyor.
      
-     // r1 r2
-     // 0  0 : nothing happend
-     // 0  1 : paused
-     // 1  0 : gameover
-     // 1  1 : victory
-     
-     flushinp(); // bunun oynayışını daha çok sevdim.
-     usleep(150000);
-     // flushinp();
+     // flushinp(); // bunun oynayışını daha çok sevdim.
+     // usleep(150000);
      
      for(Enemy* e : enemies){
-          EnemyBullet* eb = e->shoot();
-          if (eb != nullptr)
-               enemyBullets.push_back(eb);
+          if(tick%10 == 0){
+              EnemyBullet* eb = e->shoot();
+              if (eb != nullptr)
+                   enemyBullets.push_back(eb);
+          } 
      }
      
      for(EnemyBullet* eb : enemyBullets){
+          if (tick%eb->getSpeed() == 0)
           if(eb->move()) enemyBullets.erase(find(enemyBullets.begin(),enemyBullets.end(),eb)); // delete bullet if exceed border.
+                                                                                               //
           if (player->doesHit(eb)){
                lives--;
                enemyBullets.erase(find(enemyBullets.begin(), enemyBullets.end(), eb));
@@ -64,7 +63,10 @@ int SpaceShooters::process(int input, bool& r1, bool& r2){ //r1 r2 olayından ç
      }
      
      for(PlayerBullet* pb : playerBullets){
+
+          if(tick%pb->getSpeed() == 0)
           if(pb->move()) playerBullets.erase(find(playerBullets.begin(),playerBullets.end(),pb));
+
           for(Enemy* e : enemies)
                if(e->doesHit(pb)){
                     score += killscore;
@@ -75,22 +77,18 @@ int SpaceShooters::process(int input, bool& r1, bool& r2){ //r1 r2 olayından ç
      }
      
      if (lives <= 0) { //gameover
-          r1 = 1;
-          r2 = 0;
-     }else if (enemyremains == 0) { //victory
-          r1 = 1;
-          r2 = 1;
-          score += lives * livescore;
-     }else{ // nothing
-          r1 = 0;
-          r2 = 0;
+         Game::inGameOver = true;
+         return;
      }
-     
+
+     if (enemyremains <= 0) { //victory
+         Game::inVictory = true;
+         return;
+     }
+
      switch(input){
           case 27 : case 'q':
-               r1 = 0;
-               r2 = 1;
-               return 0;
+               Game::inPause = true;
                break;
           case 'h' : case 'a' : case KEY_LEFT :
                player->move(LEFT);
@@ -104,11 +102,9 @@ int SpaceShooters::process(int input, bool& r1, bool& r2){ //r1 r2 olayından ç
           default :
                break;
      }
-     
+
+
      print();
-     
-     return score;
-     
 }
 
 void SpaceShooters::printLives(){
@@ -145,6 +141,10 @@ void SpaceShooters::reset(){
 
 const char* SpaceShooters::getName(){
      return "SPACE SHOOTERS";
+}
+
+int SpaceShooters::getScore() const {
+    return score;
 }
      
 // Entity Class: 
@@ -192,17 +192,21 @@ void Enemy::reset(){
 
 // EnemyBullet Class:
 EnemyBullet::EnemyBullet(WINDOW* &win_,int y_, int x_, int speedmult):Entity(win_,y_,x_){
-    speed*=speedmult;
+    speed/=speedmult;
 }
 
 bool EnemyBullet::move(){
-     y += speed;
+     y += 1;
      if (y > win_height-2) return true;
      return false;
 }
 
 void EnemyBullet::draw() const{
      mvwprintw(win,y,x,"%c",look);
+}
+
+int EnemyBullet::getSpeed(){
+    return speed;
 }
 
 // Player Class:
@@ -216,7 +220,7 @@ bool Player::doesHit(EnemyBullet* eb) const {
 
 void Player::move(DIRECTIONS d){
      if (d == LEFT){
-          if (x > 2) x-=speed;
+          if (x > 2) x-=speed; 
           if (x < 2) x = 2;
      }else{
           if (x + width < win_width-2) x += speed;
@@ -245,12 +249,16 @@ PlayerBullet::PlayerBullet(WINDOW* &win_,int y_, int x_):Entity(win_,y_,x_){
 }
 
 bool PlayerBullet::move(){
-     y -= speed;
+     y -= 1;
      if (y < 1) return true;
      return false;
 }
 
 void PlayerBullet::draw() const{
      mvwprintw(win,y,x,"%c",look);
+}
+
+int PlayerBullet::getSpeed(){
+    return speed;
 }
 
