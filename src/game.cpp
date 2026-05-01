@@ -106,6 +106,7 @@ void Game::start(){
                handleEscape();
           
           if (COLS < win_width || LINES < win_height){
+                if (inGames) inPause = true;
                resizeNotif();
                continue;
           }

@@ -8,10 +8,12 @@
 // todo:
 
 // enemies with more health
-// timer (and new score mech with that)
 
 // immortal mode [optional]
 // die animation (enemy/player) [optional]
+
+const int Enemy::killscore = 200;
+const int SuperEnemy::killscore = 500;
 
 SpaceShooters::SpaceShooters(WINDOW* &win_){
      
@@ -21,10 +23,11 @@ SpaceShooters::SpaceShooters(WINDOW* &win_){
      player = new Player(win,14,34);
      int idx = 0;
      Enemy* e;
+     SuperEnemy* se;
      
      for(int x = 3; x<=67; x += 8){
-          e = new Enemy(win,3,x);
-          enemies.push_back(e);
+          se = new SuperEnemy(win,3,x);
+          superEnemies.push_back(se);
      }
      for(int x = 7; x<=63; x += 8){
           e = new Enemy(win,5,x);    
@@ -56,6 +59,14 @@ void SpaceShooters::process(int input){ //r1 r2 olayından çok memnun değilim 
                    enemyBullets.push_back(eb);
           } 
      }
+
+     for(SuperEnemy* se: superEnemies){
+           if (tick%12 == 0){
+                 EnemyBullet* eb = se->shoot();
+                 if (eb != nullptr)
+                       enemyBullets.push_back(eb);
+           }
+     }
      
      for(EnemyBullet* eb : enemyBullets){
           if (tick%eb->getSpeed() == 0)
@@ -72,13 +83,25 @@ void SpaceShooters::process(int input){ //r1 r2 olayından çok memnun değilim 
           if(tick%pb->getSpeed() == 0)
           if(pb->move()) playerBullets.erase(find(playerBullets.begin(),playerBullets.end(),pb));
 
-          for(Enemy* e : enemies)
-               if(e->doesHit(pb)){
-                    score += killscore;
+          for(Enemy* e : enemies){
+                  if(e->doesHit(pb)){
+                    score += e->killscore;
                     enemyremains--;
-                    e->die();
                     playerBullets.erase(find(playerBullets.begin(), playerBullets.end(), pb));
-               }
+                    break;
+                  }
+          }
+
+          for(SuperEnemy* se : superEnemies){
+                if (se->doesHit(pb)){
+                      if (se->getIsDead()){
+                            score += se->killscore;
+                            enemyremains--;
+                      }
+                      playerBullets.erase(find(playerBullets.begin(), playerBullets.end(), pb));
+                      break;
+                }
+          }
      }
      
      if (lives <= 0) { //gameover
@@ -103,9 +126,15 @@ void SpaceShooters::process(int input){ //r1 r2 olayından çok memnun değilim 
           case 'l' : case 'd' : case KEY_RIGHT :
                player->move(RIGHT);
                break;
-          case ' ' : case 'x': // shoot
-               playerBullets.push_back(player->shoot());
-               break;
+          case ' ' : case 'x': {
+               now = std::chrono::steady_clock::now();
+               auto sinceLastShot = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastPlayerShot); // burada bir koşula göre yeni bir değişken oluşturduğumuz için scope içine almalıyız
+               if (sinceLastShot.count() >= 700){
+                     playerBullets.push_back(player->shoot());
+                     lastPlayerShot = std::chrono::steady_clock::now();
+               }                     
+          }
+                  break;
           default :
                break;
      }
@@ -141,6 +170,7 @@ void SpaceShooters::print(){
      for(EnemyBullet* eb : enemyBullets) eb->draw();
      player->draw();
      for(Enemy* e : enemies) e->draw();
+     for(SuperEnemy* se: superEnemies) se->draw();
      printLives();
      printScore();
      printTimer();
@@ -156,6 +186,7 @@ void SpaceShooters::reset(){
      
      player->reset();
      for(Enemy *e : enemies) e->reset();
+     for(SuperEnemy* se : superEnemies) se->reset();
      enemyremains = enemies.size();
 
      playerBullets.clear();
@@ -175,7 +206,7 @@ int SpaceShooters::getScore() const {
 int SpaceShooters::timeBonus() {
       auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - start);
 
-      if (duration.count() <= 50) return 50 * (50 - duration.count());
+      if (duration.count() <= 90) return 50 * (90 - duration.count());
       else return 0;
 }
      
@@ -187,7 +218,11 @@ Entity::Entity(WINDOW* &win_,int y_, int x_){
 }
 
 // Enemy Class:
+
 Enemy::Enemy(WINDOW* &win_,int y_, int x_):Entity(win_,y_,x_){
+}
+
+SuperEnemy::SuperEnemy(WINDOW* &win_, int y_, int x_):Enemy(win_,y_,x_){
 }
 
 EnemyBullet* Enemy::shoot(){
@@ -203,13 +238,12 @@ EnemyBullet* Enemy::shoot(){
      return nullptr;
 }
 
-bool Enemy::doesHit(PlayerBullet* pb)const{
-     if ( x<=pb->x && pb->x<x+width && y<=pb->y && pb->y<y+height && !isDead) return true;
+bool Enemy::doesHit(PlayerBullet* pb){
+     if ( x<=pb->getX() && pb->getX()<x+width && y<=pb->getY() && pb->getY()<y+height && !isDead){
+           isDead = true;
+            return true;     
+     } 
      return false;
-}
-
-void Enemy::die(){
-     isDead = true;
 }
 
 void Enemy::draw() const{
@@ -218,8 +252,35 @@ void Enemy::draw() const{
      for(const char* line : look) mvwprintw(win,curr_y++,x,"%s", line);
 }
 
+void SuperEnemy::draw() const {
+     int curr_y = y;
+      if (isDead) return;
+
+     for(const char* line : look[lives-1]) mvwprintw(win,curr_y++,x,"%s", line);
+}
+
 void Enemy::reset(){
      isDead = false;
+}
+
+// SuperEnemy Class:
+
+bool SuperEnemy::getIsDead(){
+      return isDead;
+}
+
+void SuperEnemy::reset(){
+      isDead = false;
+      lives = 2;
+}
+
+bool SuperEnemy::doesHit(PlayerBullet* pb){
+     if ( x<=pb->getX() && pb->getX()<x+width && y<=pb->getY() && pb->getY()<y+height && !isDead){
+           if(--lives <= 0)
+                 isDead = true;
+            return true;     
+     }
+     return false;
 }
 
 // EnemyBullet Class:
@@ -246,7 +307,7 @@ Player::Player(WINDOW* &win_,int y_, int x_):Entity(win_,y_,x_){
 }
 
 bool Player::doesHit(EnemyBullet* eb) const {
-     if ( x<=eb->x && eb->x<x+width && y<=eb->y && eb->y<y+height) return true;
+     if ( x<=eb->getX() && eb->getX()<x+width && y<=eb->getY() && eb->getY()<y+height) return true;
      return false;
 }
 
@@ -257,7 +318,7 @@ void Player::move(DIRECTIONS d){
      }else{
           if (x + width < win_width-2) x += speed;
           if (x + width  >  win_width - 2) x = win_width - width -2;
-     }
+     } 
 }
 
 PlayerBullet* Player::shoot(){
