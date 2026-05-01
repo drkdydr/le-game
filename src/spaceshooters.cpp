@@ -7,7 +7,8 @@
 
 // todo:
 
-// enemies with more health
+// stop timer while pause
+// timer records time in selection menu;
 
 // immortal mode [optional]
 // die animation (enemy/player) [optional]
@@ -153,7 +154,7 @@ void SpaceShooters::printScore(){
 
 void SpaceShooters::printTimer(){
 
-      if (!gameFinished)
+      if (!Game::inPause && !Game::inVictory && !Game::inGameOver)
             now = std::chrono::steady_clock::now();
 
       auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - start);

@@ -16,7 +16,7 @@ class ComingSoon {
      
      public:
           const char* getName();
-          bool process(WINDOW* &win, int input);
+          void process(WINDOW* &win, int input);
           void print(WINDOW* &win);
           void reset();
 };

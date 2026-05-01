@@ -1,13 +1,14 @@
 #include "dinogame.h"
+#include "game.h"
 #include <ncurses.h>
 
-bool DinoGame::process(WINDOW* &win, int input){
+void DinoGame::process(WINDOW* &win, int input){
      switch(input){
           case 27 : case 'q':
-               return true;
+                Game::inPause = true;
                break;
           default :
-               return false;
+               break;
      }
      print(win);
 }

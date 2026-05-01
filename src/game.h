@@ -46,6 +46,10 @@ class Game{
      const char* pauseName = "PAUSED";
      const char* victoryName = "VICTORY";
      const char* gameoverName = "GAME OVER";
+
+     const char* game1name = "SPACE SHOOTERS";
+     const char* game2name = "COMING SOON";
+     const char* game3name = "COMING SOON";
      
      //MENU LOGOS:
      std::vector<const char*> game_logo = {

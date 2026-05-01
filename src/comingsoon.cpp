@@ -1,15 +1,16 @@
 #include <cstring>
 #include <ncurses.h>
 #include "comingsoon.h"
+#include "game.h"
 
-bool ComingSoon::process(WINDOW* &win, int input){
+void ComingSoon::process(WINDOW* &win, int input){
      print(win);
      switch(input){
           case 27 : case 'q':
-               return true;
+                Game::inPause = true;
                break;
           default :
-               return false;
+               break;
      }
 }
 
