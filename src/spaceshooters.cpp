@@ -7,13 +7,16 @@
 
 // todo:
 
-// shoot chance of enemies should increase when enemy count decreases.
+// enemies with more health
+// timer (and new score mech with that)
+
 // immortal mode [optional]
 // die animation (enemy/player) [optional]
 
 SpaceShooters::SpaceShooters(WINDOW* &win_){
      
      tick = 0;
+     gameFinished = false;
      win = win_;
      player = new Player(win,14,34);
      int idx = 0;
@@ -31,6 +34,8 @@ SpaceShooters::SpaceShooters(WINDOW* &win_){
           e = new Enemy(win,7,x);    
           enemies.push_back(e);
      }
+
+     start= std::chrono::steady_clock::now();
      
 }
 
@@ -78,11 +83,13 @@ void SpaceShooters::process(int input){ //r1 r2 olayından çok memnun değilim 
      
      if (lives <= 0) { //gameover
          Game::inGameOver = true;
+         gameFinished = true;
          return;
      }
 
      if (enemyremains <= 0) { //victory
          Game::inVictory = true;
+         gameFinished = true;
          return;
      }
 
@@ -108,11 +115,24 @@ void SpaceShooters::process(int input){ //r1 r2 olayından çok memnun değilim 
 }
 
 void SpaceShooters::printLives(){
-     mvwprintw(win,win_height-2,2,"LIVES: %d",lives);
+     mvwprintw(win,win_height-3,2,"LIVES: %d",lives);
 }
 
 void SpaceShooters::printScore(){
-     mvwprintw(win,win_height-3,2,"SCORE: %d",score);
+     mvwprintw(win,win_height-2,2,"SCORE: %d",score);
+}
+
+void SpaceShooters::printTimer(){
+
+      if (!gameFinished)
+            now = std::chrono::steady_clock::now();
+
+      auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - start);
+      int minutes = duration.count() / 60;
+      int seconds = duration.count() % 60;
+
+      mvwprintw(win, win_height-3, win_width - 7,"TIME");
+      mvwprintw(win, win_height-2, win_width -7, "%02d:%02d", minutes, seconds);
 }
 
 void SpaceShooters::print(){
@@ -123,6 +143,7 @@ void SpaceShooters::print(){
      for(Enemy* e : enemies) e->draw();
      printLives();
      printScore();
+     printTimer();
      wnoutrefresh(win);
 }
 
@@ -130,6 +151,8 @@ void SpaceShooters::reset(){
      
      lives = 3;
      score = 0;
+
+     gameFinished = false;
      
      player->reset();
      for(Enemy *e : enemies) e->reset();
@@ -137,6 +160,8 @@ void SpaceShooters::reset(){
 
      playerBullets.clear();
      enemyBullets.clear();
+
+     start= std::chrono::steady_clock::now();
 }
 
 const char* SpaceShooters::getName(){
@@ -145,6 +170,13 @@ const char* SpaceShooters::getName(){
 
 int SpaceShooters::getScore() const {
     return score;
+}
+
+int SpaceShooters::timeBonus() {
+      auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - start);
+
+      if (duration.count() <= 50) return 50 * (50 - duration.count());
+      else return 0;
 }
      
 // Entity Class: 

@@ -517,7 +517,13 @@ void Game::drawPause(){
 void Game::drawScore(){
      const char* text = "SCORE:";
      mvwprintw(mainwin, 8, (win_width - strlen(text))/2, "%s", text);
-     mvwprintw(mainwin, 9, (win_width - findDigits(game1->getScore()))/2, "%d", game1->getScore());
+     if (inGame1){
+           if (inVictory)
+                 mvwprintw(mainwin, 9, (win_width - findDigits(game1->getScore() + game1->timeBonus()))/2, "%d", game1->getScore() + game1->timeBonus());
+           if (inGameOver)
+                 mvwprintw(mainwin, 9, (win_width - findDigits(game1->getScore()))/2, "%d", game1->getScore());
+     }
+
      
 }
 

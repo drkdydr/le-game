@@ -3,6 +3,7 @@
 
 #include <ncurses.h>
 #include <vector>
+#include <chrono>
 
 class Entity;
 class Enemy;
@@ -105,7 +106,11 @@ class SpaceShooters{
      int killscore = 200;
      int livescore = 500;
      
+     bool gameFinished;
+
      int tick;
+     std::chrono::time_point<std::chrono::steady_clock> start;
+     std::chrono::time_point<std::chrono::steady_clock> now;
      
      // bool didWin = false;
      // bool didDie = false; // buralardan victory ya da game over screen'e falan atıcam.
@@ -119,6 +124,7 @@ class SpaceShooters{
      
      void printLives();
      void printScore();
+     void printTimer();
      void printEnemies();
      void printEnemyBullets();
      void printPlayerBullets();
@@ -136,6 +142,7 @@ class SpaceShooters{
           void reset(); // will reset the game.
           const char* getName();
           int getScore() const;
+          int timeBonus();
 
     friend class Enemy; //aklıma daha iyi bir yol gelmedi (bu file 104, cpp 164)
 };
