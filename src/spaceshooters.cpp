@@ -50,7 +50,7 @@ SpaceShooters::SpaceShooters(WINDOW* &win_){
 
 void SpaceShooters::start(int input){ //r1 r2 olayından çok memnun değilim ama iyi de duruyorlar.
      
-     if (tick >= 100) tick = 0; //prevent overflow
+     if (tick >= 120) tick = 0; //prevent overflow (10 ve 12 nin ortak katı)
      tick++;
      // if (tick % 50 != 0) return false; //tick rate for game (will be set more precisely)
      //tick'i buraya eklemek mallık 50 tane çalışmadan birinde çalışıyor.
@@ -97,17 +97,17 @@ void SpaceShooters::start(int input){ //r1 r2 olayından çok memnun değilim am
 
           for(Enemy* e : enemies){
                   if(e->doesHit(pb)){
-                    score += e->killscore;
+                    score += Enemy::killscore;
                     enemyremains--;
                     playerBullets.erase(find(playerBullets.begin(), playerBullets.end(), pb));
-                    break;
+                    break; 
                   }
           }
 
           for(SuperEnemy* se : superEnemies){
                 if (se->doesHit(pb)){
                       if (se->getIsDead()){
-                            score += se->killscore;
+                            score += SuperEnemy::killscore;
                             enemyremains--;
                       }
                       playerBullets.erase(find(playerBullets.begin(), playerBullets.end(), pb));
@@ -212,7 +212,7 @@ void SpaceShooters::reset(){
      player->reset();
      for(Enemy *e : enemies) e->reset();
      for(SuperEnemy* se : superEnemies) se->reset();
-     enemyremains = enemies.size();
+     enemyremains = 26;
 
      playerBullets.clear();
      enemyBullets.clear();

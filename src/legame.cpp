@@ -426,10 +426,8 @@ void LeGame::handlePause(int input){
           case KEY_ENTER : case '\n' : case ' ':
                if (!quitbutt->isSelected){
                     
-                    if (inGame1){
+                    if (inGame1)
                         windowTitle = game1->getName();
-                          game1->setEnterPoint();
-                    }
                     
                     if (inGame2)
                         windowTitle = game2->getName();
@@ -444,6 +442,9 @@ void LeGame::handlePause(int input){
                               game2->reset();
                          else if (inGame3)
                               game3->reset();
+                    }else{
+                          if (inGame1)
+                                game1->setEnterPoint();
                     }
                     
                }else{
@@ -463,6 +464,8 @@ void LeGame::handlePause(int input){
 
                for(BUTTON* b : pauseButtons) hideButton(b);
                inPause = false;
+               return; //bunu eklemezsem game1'de timer'da pause'tan geri oyuna geçerken dalgalanma oluyor
+                       //gerçi gerek de yok zaten çıkıcaz niye yazdırıyon ki
                break;
                
           case 'q': case 27:
