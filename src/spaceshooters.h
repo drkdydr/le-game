@@ -113,6 +113,8 @@ class SpaceShooters {
 
       int tick;
       std::chrono::time_point<std::chrono::steady_clock> startPoint;
+      std::chrono::time_point<std::chrono::steady_clock> enterPoint;
+      std::chrono::time_point<std::chrono::steady_clock> exitPoint;
       std::chrono::time_point<std::chrono::steady_clock> now;
       std::chrono::time_point<std::chrono::steady_clock> lastPlayerShot;
 
@@ -148,6 +150,10 @@ class SpaceShooters {
       const char *getName();
       int getScore() const;
       int timeBonus();
+
+      void setStartPoint();
+      void setEnterPoint();
+      void setExitPoint();
 
       friend class Enemy; // aklıma daha iyi bir yol gelmedi (bu file 104, cpp 164)
 };

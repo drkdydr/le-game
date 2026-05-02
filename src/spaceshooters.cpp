@@ -11,6 +11,9 @@
 // timer records time in selection menu;
 // timer also records time from the start of program because I chronometer starts when ss object initialized
 
+// pause'a falan geçerken şu ana kadar geçen süreyi bir değişkene kaydet.
+// her inGame1 setlendiğinde bir enterPoint tut ve her çıkış yapıldığında bir exitPoint tut eğer exitPoint enter point'ten önce ise arasındaki farkı startPoint'e kaydır.
+
 // immortal mode [optional]
 // die animation (enemy/player) [optional]
 
@@ -39,9 +42,10 @@ SpaceShooters::SpaceShooters(WINDOW* &win_){
           e = new Enemy(win,7,x);    
           enemies.push_back(e);
      }
-
-     startPoint = std::chrono::steady_clock::now();
      
+      // startPoint = std::chrono::steady_clock::now();
+      // exitPoint = std::chrono::steady_clock::now();
+
 }
 
 void SpaceShooters::start(int input){ //r1 r2 olayından çok memnun değilim ama iyi de duruyorlar.
@@ -54,6 +58,12 @@ void SpaceShooters::start(int input){ //r1 r2 olayından çok memnun değilim am
      // flushinp(); // bunun oynayışını daha çok sevdim.
      // usleep(150000);
      
+      if (exitPoint < enterPoint){
+            auto timeinMenus = enterPoint - exitPoint;
+            startPoint += timeinMenus;
+            exitPoint = enterPoint; // tekrar tekrar eklemesin diye
+      }
+
      for(Enemy* e : enemies){
           if(tick%10 == 0){
               EnemyBullet* eb = e->shoot();
@@ -121,6 +131,7 @@ void SpaceShooters::start(int input){ //r1 r2 olayından çok memnun değilim am
      switch(input){
           case 27 : case 'q':
                LeGame::inPause = true;
+               exitPoint = std::chrono::steady_clock::now();
                break;
           case 'h' : case 'a' : case KEY_LEFT :
                player->move(LEFT);
@@ -166,13 +177,25 @@ void SpaceShooters::printTimer(){
       mvwprintw(win, win_height-2, win_width -7, "%02d:%02d", minutes, seconds);
 }
 
+void SpaceShooters::setStartPoint(){
+      startPoint = std::chrono::steady_clock::now();
+}
+
+void SpaceShooters::setEnterPoint(){
+      enterPoint = std::chrono::steady_clock::now();
+}
+
+void SpaceShooters::setExitPoint(){
+      exitPoint = std::chrono::steady_clock::now();
+}
+
 void SpaceShooters::print(){
-     // bullets -> player -> enemies : yazdırma sırası 
-     for(PlayerBullet* pb : playerBullets) pb->draw();
-     for(EnemyBullet* eb : enemyBullets) eb->draw();
+     // player -> bullets -> enemies : yazdırma sırası 
      player->draw();
      for(Enemy* e : enemies) e->draw();
      for(SuperEnemy* se: superEnemies) se->draw();
+     for(PlayerBullet* pb : playerBullets) pb->draw();
+     for(EnemyBullet* eb : enemyBullets) eb->draw();
      printLives();
      printScore();
      printTimer();
@@ -195,6 +218,7 @@ void SpaceShooters::reset(){
      enemyBullets.clear();
 
      startPoint= std::chrono::steady_clock::now();
+     enterPoint = exitPoint = startPoint;
 }
 
 const char* SpaceShooters::getName(){

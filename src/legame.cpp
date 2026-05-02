@@ -132,7 +132,7 @@ void LeGame::start(){
                handleGameOver(in);
 
           }else if (inGame1){
-              game1->start(in);
+               game1->start(in);
 
           } else if (inGame2){
                game2->process(mainwin,in);
@@ -358,6 +358,7 @@ void LeGame::handleSelec(int input){
                if (game1butt->isSelected){
                      windowTitle = game1->getName();
                     inGame1 = true;
+                    game1->reset(); // 3 satır set şu time set bu time yapacağıma bunu koymayı daha temiz gördüm
                }
 
                if (game2butt->isSelected){
@@ -425,8 +426,10 @@ void LeGame::handlePause(int input){
           case KEY_ENTER : case '\n' : case ' ':
                if (!quitbutt->isSelected){
                     
-                    if (inGame1)
+                    if (inGame1){
                         windowTitle = game1->getName();
+                          game1->setEnterPoint();
+                    }
                     
                     if (inGame2)
                         windowTitle = game2->getName();
