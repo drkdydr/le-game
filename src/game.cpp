@@ -357,17 +357,17 @@ void Game::handleSelec(int input){
           // \n ise klavyedeki enter'ı temsil ediyormuş.
                
                if (game1butt->isSelected){
-                     windowTitle = game1name;
+                     windowTitle = game1->getName();
                     inGame1 = true;
                }
 
                if (game2butt->isSelected){
-                     windowTitle = game2name;
+                     windowTitle = game2->getName();
                     inGame2 = true;
                }
 
                if (game3butt->isSelected){
-                     windowTitle = game3name;
+                     windowTitle = game3->getName();
                     inGame3 = true;
                }
 
@@ -427,11 +427,13 @@ void Game::handlePause(int input){
                if (!quitbutt->isSelected){
                     
                     if (inGame1)
-                          windowTitle = game1name;
-                    else if (inGame2)
-                          windowTitle = game2name;
-                    else if (inGame3)
-                          windowTitle = game3name;
+                        windowTitle = game1->getName();
+                    
+                    if (inGame2)
+                        windowTitle = game2->getName();
+                    
+                    if (inGame3)
+                        windowTitle = game3->getName();
                     
                     if(restartbutt->isSelected){
                          if(inGame1)
@@ -561,13 +563,13 @@ void Game::handleVictory(int input){
                }else{
                     
                     if (inGame1)
-                          windowTitle = game1name; //bunları game1->getName() e geri çevir
+                        windowTitle = game1->getName();
                     
                     if (inGame2)
-                          windowTitle = game2name;
+                        windowTitle = game2->getName();
                     
                     if (inGame3)
-                          windowTitle = game3name;
+                        windowTitle = game3->getName();
                     
                }
                
@@ -662,13 +664,13 @@ void Game::handleGameOver(int input){
                }else{
                     
                     if (inGame1)
-                          windowTitle = game1name;
+                        windowTitle = game1->getName();
                     
                     if (inGame2)
-                          windowTitle = game2name;
+                        windowTitle = game2->getName();
                     
                     if (inGame3)
-                          windowTitle = game3name;
+                        windowTitle = game3->getName();
                     
                }
                inGameOver = false;

@@ -9,6 +9,7 @@
 
 // stop timer while pause
 // timer records time in selection menu;
+// timer also records time from the start of program because I chronometer starts when ss object initialized
 
 // immortal mode [optional]
 // die animation (enemy/player) [optional]
