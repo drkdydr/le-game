@@ -5,6 +5,8 @@
 #include <ncurses.h>
 #include <string>
 #include <vector>
+#include <chrono>
+
 #include "spaceshooters.h"
 #include "dinogame.h"
 #include "comingsoon.h"
@@ -34,7 +36,7 @@ struct BUTTON {
 
 const int win_width= 75, win_height = 18;
 
-class Game{
+class LeGame{
      
      friend class SpaceShooters;
      friend class DinoGame;
@@ -102,10 +104,11 @@ class Game{
      bool exitWanted = false;
      bool escDetected = false;
      
+     // static bool inMenus;
      static bool inMain;
      static bool inSelect;
      static bool inPause;
-     static bool inGames;
+     // static bool inGames;
      static bool inGame1;
      static bool inGame2;
      static bool inGame3;
@@ -174,6 +177,11 @@ class Game{
     
      void alignWin(); // bunun başına block constructor yaptığımda zaten iki fonksiyonu da elde edeceğim.
      void handleEscape();
+
+     std::chrono::time_point<std::chrono::steady_clock> startPoint;
+     std::chrono::time_point<std::chrono::steady_clock> now;
+
+     auto timePassedinMenus();
      
      public:
      void initialize();

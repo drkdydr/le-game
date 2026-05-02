@@ -112,7 +112,7 @@ class SpaceShooters {
       bool gameFinished;
 
       int tick;
-      std::chrono::time_point<std::chrono::steady_clock> start;
+      std::chrono::time_point<std::chrono::steady_clock> startPoint;
       std::chrono::time_point<std::chrono::steady_clock> now;
       std::chrono::time_point<std::chrono::steady_clock> lastPlayerShot;
 
@@ -142,7 +142,7 @@ class SpaceShooters {
     public:
       SpaceShooters(WINDOW *&win);
       ~SpaceShooters();
-      void process(int input); // bit based coding function result
+      void start(int input); // bit based coding function result
       void print();
       void reset(); // will reset the game.
       const char *getName();

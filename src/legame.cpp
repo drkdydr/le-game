@@ -1,4 +1,4 @@
-#include "game.h"
+#include "legame.h"
 #include <locale.h> //for setlocale
 #include <cstdlib>
 #include <ncurses.h>
@@ -8,6 +8,7 @@
 #include <string>
 #include <unistd.h> // for usleep();
 #include <vector>
+#include <chrono>
 
 //todo :
 // warninglerden kurtul. (BUTTON'da char* variable'ın başına const yazdım oldu.)
@@ -16,24 +17,21 @@
 //comingsoon'da esc yapınca pause ekranında resume ve restartbutt'lar aynı anda yanıyor. düzelince hep düzeliyor.
 
 // optional
-// isHidden bir işe yarıyor mu bak.
-// buttonları gerçekten buton yap (press fonksiyonu ekle ve yapacaklarını oraya yaz.)
-// gereksiz wnoutrefresh'leri kaldır.
 // main menu falan sadece ekran boyutu falan değiştiği zaman değişsin
-// butonlarda dalgalanma oluyor.
 // butonlar sadece switch sırasında tekrar yazılsın istiyorum.
 
-bool Game::inMain = true; //sınıf içindeki static data member'lar cpp dosyasında "dışarıda" tanımlanır.
-bool Game::inSelect = false;
-bool Game::inPause = false;
-bool Game::inGames = false;
-bool Game::inGame1 = false;
-bool Game::inGame2 = false;
-bool Game::inGame3 = false;
-bool Game::inVictory = false;
-bool Game::inGameOver = false;
+// bool LeGame::inMenus = true;
+bool LeGame::inMain = true; //sınıf içindeki static data member'lar cpp dosyasında "dışarıda" tanımlanır.
+bool LeGame::inSelect = false;
+bool LeGame::inPause = false;
+// bool LeGame::inGames = false;
+bool LeGame::inGame1 = false;
+bool LeGame::inGame2 = false;
+bool LeGame::inGame3 = false;
+bool LeGame::inVictory = false;
+bool LeGame::inGameOver = false;
 
-void Game::initialize(){
+void LeGame::initialize(){
      
      setlocale(LC_ALL, ""); //for unicode char display (bold box characters)
      
@@ -56,7 +54,7 @@ void Game::initialize(){
      
      game1butt = new BUTTON(mainwin,game1->getName(),8);
      // game2butt = new BUTTON(mainwin,"DINO GAME",11);
-     game2butt = new BUTTON(mainwin,game2->getName(),11);
+     game2butt =  new BUTTON(mainwin,game2->getName(),11);
      game3butt = new BUTTON(mainwin,game3->getName(),14);
      
      resumebutt = new BUTTON(mainwin,"RESUME",7);
@@ -86,9 +84,12 @@ void Game::initialize(){
      keypad(mainwin,false);
 }
 
-void Game::start(){
+void LeGame::start(){
+
+      initialize();
      
      inMain = true;
+     // inMenus = true;
      
      while(true){
           
@@ -106,7 +107,7 @@ void Game::start(){
                handleEscape();
           
           if (COLS < win_width || LINES < win_height){
-                if (inGames) inPause = true;
+                if (inGame1 || inGame2 || inGame3) inPause = true;
                resizeNotif();
                continue;
           }
@@ -114,8 +115,6 @@ void Game::start(){
           wclear(mainwin);
           box(mainwin,0,0);
           mvwprintw(mainwin,0,1," %s ", windowTitle);
-          
-          // pause menuyu daha abstract yapacam
 
           if (inMain){
                handleMain(in);
@@ -133,7 +132,7 @@ void Game::start(){
                handleGameOver(in);
 
           }else if (inGame1){
-              game1->process(in);
+              game1->start(in);
 
           } else if (inGame2){
                game2->process(mainwin,in);
@@ -149,7 +148,7 @@ void Game::start(){
      endwin();
 }
 
-void Game::handleEscape(){
+void LeGame::handleEscape(){
      int in2 = wgetch(mainwin);
      if (in2 == '['){
           int in3 = wgetch(mainwin);
@@ -175,7 +174,7 @@ void Game::handleEscape(){
           ungetch(in2);
 }
 
-void Game::alignWin(){
+void LeGame::alignWin(){
      
      int h = std::min(LINES, win_height);
      int w = std::min(COLS, win_width);
@@ -202,7 +201,7 @@ void Game::alignWin(){
      
 }
 
-void Game::hideButton(BUTTON* b){
+void LeGame::hideButton(BUTTON* b){
      if (b == nullptr) return;
      
      if (b->win != nullptr){ 
@@ -217,7 +216,7 @@ void Game::hideButton(BUTTON* b){
      
 }
 
-void Game::alignButton(BUTTON* b){
+void LeGame::alignButton(BUTTON* b){
      
      if (b == nullptr) return;
      
@@ -240,7 +239,7 @@ void Game::alignButton(BUTTON* b){
      
 }
 
-void Game::resizeNotif(){ // acaba daha iyi nasıl yazabilirdim?
+void LeGame::resizeNotif(){ // acaba daha iyi nasıl yazabilirdim?
      //windowlar üst üste binebiliyor
      
      int height, width;
@@ -259,7 +258,7 @@ void Game::resizeNotif(){ // acaba daha iyi nasıl yazabilirdim?
      wrefresh(mainwin);
 }
 
-void Game::handleMain(int input){
+void LeGame::handleMain(int input){
      const static int button_count = 2;
      static int curr_idx = 0;
 
@@ -301,7 +300,7 @@ void Game::handleMain(int input){
      drawMain();
 }
 
-void Game::drawMain(){
+void LeGame::drawMain(){
      printLogo(game_logo,2);
      // printVer();
      wnoutrefresh(mainwin);
@@ -314,7 +313,7 @@ void Game::drawMain(){
 //      mvwprintw(mainwin,win_height-2,win_width - (strlen(text) + strlen(version) + 2),"%s%s",text,version);
 // }
 
-void Game::printLogo(std::vector<const char*> &logo, int y_idx){
+void LeGame::printLogo(std::vector<const char*> &logo, int y_idx){
      
      int w_height, w_width;
      
@@ -325,7 +324,7 @@ void Game::printLogo(std::vector<const char*> &logo, int y_idx){
      
 }
 
-void Game::handleSelec(int input){
+void LeGame::handleSelec(int input){
      
      const static int button_count = 3;
      static int curr_idx = 0;
@@ -372,7 +371,7 @@ void Game::handleSelec(int input){
                }
 
               inSelect = false;
-               inGames = true;
+               // inGames = true;
                for(BUTTON* b : selecButtons) hideButton(b);
 
           break;
@@ -388,7 +387,7 @@ void Game::handleSelec(int input){
      drawSelec();
 }
 
-void Game::drawSelec(){
+void LeGame::drawSelec(){
      printLogo(select_logo,3);
      wnoutrefresh(mainwin);
      game1butt->drawButt();
@@ -396,7 +395,7 @@ void Game::drawSelec(){
      game3butt->drawButt();
 }
 
-void Game::handlePause(int input){
+void LeGame::handlePause(int input){
      
      const static int button_count = 3;
      static int curr_idx = 0;
@@ -454,7 +453,7 @@ void Game::handlePause(int input){
                          game3->reset();
                     
                    inGame1 = inGame2 = inGame3 = false; 
-                   inGames = false;
+                   // inGames = false;
                    inSelect = true;
                    
                }
@@ -487,7 +486,7 @@ void Game::handlePause(int input){
      drawPause();
 }
 
-void Game::drawPause(){
+void LeGame::drawPause(){
      
      if(inGame1){
           game1->print();
@@ -505,7 +504,7 @@ void Game::drawPause(){
      quitbutt->drawButt();
 }
 
-void Game::drawScore(){ // implemented only for game1 if you wanna add new games handle it
+void LeGame::drawScore(){ // implemented only for game1 if you wanna add new games handle it
      const char* text = "SCORE:";
      mvwprintw(mainwin, 8, (win_width - strlen(text))/2, "%s", text);
      if (inGame1){
@@ -518,7 +517,7 @@ void Game::drawScore(){ // implemented only for game1 if you wanna add new games
      
 }
 
-void Game::handleVictory(int input){
+void LeGame::handleVictory(int input){
      
      const static int button_count = 2;
      static int curr_idx = 0;
@@ -599,7 +598,7 @@ void Game::handleVictory(int input){
      drawVictory();
 }
 
-void Game::drawVictory(){
+void LeGame::drawVictory(){
 
      if(inGame1){
           game1->print();
@@ -618,7 +617,7 @@ void Game::drawVictory(){
      quitbutt->drawButt();
 }
 
-void Game::handleGameOver(int input){
+void LeGame::handleGameOver(int input){
      windowTitle = gameoverName; //process functionlarını bunu kaçınılmaz kılacak şekilde yazmışız da o yüzden
      
      const static int button_count = 2;
@@ -700,7 +699,7 @@ void Game::handleGameOver(int input){
      
 }
 
-void Game::drawGameOver(){
+void LeGame::drawGameOver(){
      if(inGame1){
           game1->print();
      }else if (inGame2){

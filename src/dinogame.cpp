@@ -1,11 +1,11 @@
 #include "dinogame.h"
-#include "game.h"
+#include "legame.h"
 #include <ncurses.h>
 
 void DinoGame::process(WINDOW* &win, int input){
      switch(input){
           case 27 : case 'q':
-                Game::inPause = true;
+                LeGame::inPause = true;
                break;
           default :
                break;

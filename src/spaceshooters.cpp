@@ -1,5 +1,5 @@
 #include "spaceshooters.h"
-#include "game.h"
+#include "legame.h"
 #include <cstdlib>
 #include <ncurses.h>
 #include <algorithm>
@@ -40,11 +40,11 @@ SpaceShooters::SpaceShooters(WINDOW* &win_){
           enemies.push_back(e);
      }
 
-     start= std::chrono::steady_clock::now();
+     startPoint = std::chrono::steady_clock::now();
      
 }
 
-void SpaceShooters::process(int input){ //r1 r2 olayından çok memnun değilim ama iyi de duruyorlar.
+void SpaceShooters::start(int input){ //r1 r2 olayından çok memnun değilim ama iyi de duruyorlar.
      
      if (tick >= 100) tick = 0; //prevent overflow
      tick++;
@@ -107,20 +107,20 @@ void SpaceShooters::process(int input){ //r1 r2 olayından çok memnun değilim 
      }
      
      if (lives <= 0) { //gameover
-         Game::inGameOver = true;
+         LeGame::inGameOver = true;
          gameFinished = true;
          return;
      }
 
      if (enemyremains <= 0) { //victory
-         Game::inVictory = true;
+         LeGame::inVictory = true;
          gameFinished = true;
          return;
      }
 
      switch(input){
           case 27 : case 'q':
-               Game::inPause = true;
+               LeGame::inPause = true;
                break;
           case 'h' : case 'a' : case KEY_LEFT :
                player->move(LEFT);
@@ -155,10 +155,10 @@ void SpaceShooters::printScore(){
 
 void SpaceShooters::printTimer(){
 
-      if (!Game::inPause && !Game::inVictory && !Game::inGameOver)
+      if (!LeGame::inPause && !LeGame::inVictory && !LeGame::inGameOver)
             now = std::chrono::steady_clock::now();
 
-      auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - start);
+      auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - startPoint);
       int minutes = duration.count() / 60;
       int seconds = duration.count() % 60;
 
@@ -194,7 +194,7 @@ void SpaceShooters::reset(){
      playerBullets.clear();
      enemyBullets.clear();
 
-     start= std::chrono::steady_clock::now();
+     startPoint= std::chrono::steady_clock::now();
 }
 
 const char* SpaceShooters::getName(){
@@ -206,7 +206,7 @@ int SpaceShooters::getScore() const {
 }
 
 int SpaceShooters::timeBonus() {
-      auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - start);
+      auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - startPoint);
 
       if (duration.count() <= 90) return 50 * (90 - duration.count());
       else return 0;

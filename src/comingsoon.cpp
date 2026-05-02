@@ -1,13 +1,13 @@
 #include <cstring>
 #include <ncurses.h>
 #include "comingsoon.h"
-#include "game.h"
+#include "legame.h"
 
 void ComingSoon::process(WINDOW* &win, int input){
      print(win);
-     switch(input){
+     switch(input){ 
           case 27 : case 'q':
-                Game::inPause = true;
+                LeGame::inPause = true;
                break;
           default :
                break;

@@ -1,4 +1,4 @@
-#include "game.h"
+#include "legame.h"
 #include <iostream>
 #include <ncursesw/ncurses.h>
 
@@ -35,12 +35,10 @@ int main(int argc, char* argv[]){
                handleArg(argv[i]);
      }
      
-     Game g; 
-     g.initialize();
+     LeGame g; 
      g.start();
      
      // char ch ;
      // ch = getch();
      
-     endwin();
 }
